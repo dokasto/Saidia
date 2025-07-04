@@ -1,12 +1,19 @@
 import React from 'react';
 import * as stylex from '@stylexjs/stylex';
+import { Loader, Text } from '@mantine/core';
 
 export default function SplashScreen() {
   return (
     <div {...stylex.props(styles.container)}>
       <div {...stylex.props(styles.content)}>
         <div {...stylex.props(styles.title)}>Saidia</div>
-        <div {...stylex.props(styles.subTitle)}>AI Teacher's Assistants</div>
+        <Text size="lg" fw={500}>
+          AI Teacher's Assistants
+        </Text>
+        <div {...stylex.props(styles.loaderContent)}>
+          <Loader color="gray" size="xs" />
+          <Text size="xs">Setting up, please wait...</Text>
+        </div>
       </div>
     </div>
   );
@@ -17,6 +24,13 @@ const styles = stylex.create({
     display: 'flex',
     flexDirection: 'column',
     textAlign: 'center',
+  },
+  loaderContent: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
   },
   container: {
     position: 'absolute',

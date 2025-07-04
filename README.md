@@ -14,7 +14,7 @@ npm start
 ## Development
 
 - [Stylex](https://stylexjs.com/docs/learn/) for CSS
-- [Ant Design](https://ant.design/) is the UI library used.
+- [Mantine](https://mantine.dev/) is the UI library used.
 
 ## Documentation
 
