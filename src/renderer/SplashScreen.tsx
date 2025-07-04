@@ -31,7 +31,7 @@ const styles = stylex.create({
   },
   title: {
     fontSize: 46,
-    color: 'blue',
+    color: 'black',
   },
   subTitle: {
     fontSize: 16,

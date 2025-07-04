@@ -43,12 +43,6 @@ ${chalk.whiteBright.bgGreen.bold(
 )}
  Read more about native dependencies at:
 ${chalk.bold(
-  'https://electron-react-boilerplate.js.org/docs/adding-dependencies/#module-structure',
+  'https://saidia.ai/docs/adding-dependencies/#module-structure',
 )}
- `);
-      process.exit(1);
-    }
-  } catch {
-    console.log('Native dependencies could not be checked');
-  }
-}
+ `

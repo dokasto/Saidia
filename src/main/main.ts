@@ -39,6 +39,9 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
+// Set the application name
+app.setName('Saidia');
+
 if (isDebug) {
   require('electron-debug').default();
 }
@@ -73,6 +76,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
+    title: 'Saidia',
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
