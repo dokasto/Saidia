@@ -14,6 +14,9 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { initDatabase } from './database';
+import { setupIpcHandlers } from './ipc-handlers';
+import { FileManager } from './files/file-manager';
 
 class AppUpdater {
   constructor() {
@@ -130,12 +133,40 @@ app.on('window-all-closed', () => {
 
 app
   .whenReady()
-  .then(() => {
-    createWindow();
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
-    });
+  .then(async () => {
+    // Initialize database and file manager before creating window
+    try {
+      console.log('Starting system initialization...');
+
+      await initDatabase();
+      console.log('Database initialized successfully');
+
+      await FileManager.initialize();
+      console.log('File manager initialized successfully');
+
+      // Setup IPC handlers only after successful initialization
+      setupIpcHandlers();
+      console.log('IPC handlers set up successfully');
+
+      createWindow();
+      app.on('activate', () => {
+        // On macOS it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (mainWindow === null) createWindow();
+      });
+    } catch (error) {
+      console.error('CRITICAL: Failed to initialize systems:', error);
+      console.error('Error details:', error);
+
+      // Show error dialog to user
+      const { dialog } = require('electron');
+      dialog.showErrorBox(
+        'Initialization Error',
+        `Failed to initialize application systems: ${(error as Error).message}\n\nPlease try restarting the application.`,
+      );
+
+      // Exit the application if initialization fails
+      app.quit();
+    }
   })
   .catch(console.log);

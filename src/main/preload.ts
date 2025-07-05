@@ -1,6 +1,7 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { DIALOG_EVENTS } from '../constants/events';
 
 export type Channels = 'ipc-example';
 
@@ -20,6 +21,14 @@ const electronHandler = {
     },
     once(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
+    },
+    invoke(channel: string, ...args: unknown[]) {
+      return ipcRenderer.invoke(channel, ...args);
+    },
+  },
+  dialog: {
+    showOpenDialog: (options: any) => {
+      return ipcRenderer.invoke(DIALOG_EVENTS.SHOW_OPEN_DIALOG, options);
     },
   },
 };

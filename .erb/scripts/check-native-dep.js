@@ -42,7 +42,10 @@ ${chalk.whiteBright.bgGreen.bold(
   'cd ./release/app && npm install your-package',
 )}
  Read more about native dependencies at:
-${chalk.bold(
-  'https://saidia.ai/docs/adding-dependencies/#module-structure',
-)}
- `
+${chalk.bold('https://electron-react-boilerplate.js.org/docs/adding-dependencies/#module-structure')}
+ `);
+    }
+  } catch (err) {
+    console.log('Native dependencies could not be checked');
+  }
+}

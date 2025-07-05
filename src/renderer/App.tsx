@@ -4,6 +4,7 @@ import SplashScreen from './SplashScreen';
 import '@mantine/core/styles.css';
 import './App.css';
 import { createTheme, MantineProvider } from '@mantine/core';
+import { DatabaseDemo } from './database/DatabaseDemo';
 
 const theme = createTheme({
   fontFamily: 'Nunito, sans-serif',
@@ -15,6 +16,7 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<SplashScreen />} />
+          <Route path="/database" element={<DatabaseDemo />} />
         </Routes>
       </Router>
     </MantineProvider>

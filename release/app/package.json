@@ -8,5 +8,10 @@
     "postinstall": "npm run rebuild && npm run link-modules",
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
-  "dependencies": {}
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "sequelize": "^6.37.7",
+    "sqlite-vec": "^0.1.7-alpha.2",
+    "sqlite3": "^5.1.7"
+  }
 }
