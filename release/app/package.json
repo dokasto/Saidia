@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
+    "ollama": "^0.5.16",
     "sequelize": "^6.37.7",
     "sqlite-vec": "^0.1.7-alpha.2",
     "sqlite3": "^5.1.7"
