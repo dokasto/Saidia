@@ -4,7 +4,7 @@
   "description": "AI Teacher's Assistants",
   "main": "./dist/main/main.js",
   "scripts": {
-    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir . --version 37.2.0",
     "postinstall": "npm run rebuild && npm run link-modules",
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
@@ -13,5 +13,9 @@
     "sequelize": "^6.37.7",
     "sqlite-vec": "^0.1.7-alpha.2",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-rebuild": "^3.2.9"
   }
 }
