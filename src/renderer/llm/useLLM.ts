@@ -44,6 +44,21 @@ export function useLLM() {
     availableModels: [],
   });
 
+  // Get the fixed model name from the service
+  const getModelName = useCallback(async () => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke(
+        LLM_EVENTS.GET_MODEL_NAME,
+      );
+      if (result.success) {
+        return result.data;
+      }
+    } catch (error) {
+      console.error('Failed to get model name:', error);
+    }
+    return 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:F16'; // fallback
+  }, []);
+
   // Check if Ollama is installed
   const checkOllamaInstalled = useCallback(async () => {
     try {
@@ -58,12 +73,12 @@ export function useLLM() {
     }
   }, []);
 
-  // Check if a model is installed
-  const checkModelInstalled = useCallback(async (modelName: string) => {
+  // Check if the fixed model is installed
+  const checkModelInstalled = useCallback(async (modelName?: string) => {
     try {
       const result = await window.electron.ipcRenderer.invoke(
         LLM_EVENTS.CHECK_MODEL_INSTALLED,
-        modelName,
+        modelName, // If no model name provided, service will use the fixed model
       );
       if (result.success) {
         setState((prev) => ({ ...prev, isModelInstalled: result.data }));
@@ -160,14 +175,14 @@ export function useLLM() {
     }
   }, []);
 
-  // Download a model
-  const downloadModel = useCallback(async (modelName: string) => {
+  // Download the fixed model
+  const downloadModel = useCallback(async (modelName?: string) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const result = await window.electron.ipcRenderer.invoke(
         LLM_EVENTS.DOWNLOAD_MODEL,
-        modelName,
+        modelName, // If no model name provided, service will use the fixed model
       );
 
       if (result.success) {
@@ -195,14 +210,14 @@ export function useLLM() {
     }
   }, []);
 
-  // Start a chat session
-  const startChat = useCallback(async (model: string) => {
+  // Start a chat session (no model parameter needed since it's fixed)
+  const startChat = useCallback(async (model?: string) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const result = await window.electron.ipcRenderer.invoke(
         LLM_EVENTS.START_CHAT,
-        model,
+        model, // Service will use the fixed model
       );
 
       if (result.success) {
@@ -356,6 +371,7 @@ export function useLLM() {
     checkOllamaInstalled,
     checkModelInstalled,
     getAvailableModels,
+    getModelName,
     startOllama,
     downloadOllama,
     downloadModel,

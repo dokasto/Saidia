@@ -45,6 +45,9 @@ export class LLMService {
     host: 'http://127.0.0.1:11434',
   });
 
+  // Fixed model to use
+  private static readonly MODEL_NAME = 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:F16';
+
   /**
    * Initialize the LLM service
    */
@@ -201,7 +204,9 @@ export class LLMService {
   /**
    * Check if a model is installed
    */
-  static async isModelInstalled(modelName: string): Promise<boolean> {
+  static async isModelInstalled(
+    modelName: string = this.MODEL_NAME,
+  ): Promise<boolean> {
     try {
       // If Ollama is running, use the ollama-js library to check for models
       if (this.isOllamaRunning()) {
@@ -222,9 +227,10 @@ export class LLMService {
 
   /**
    * Download a model using Ollama's pull command
+   * Note: This is kept for compatibility but with ollama run, the model will be auto-downloaded
    */
   static async downloadModel(
-    modelName: string,
+    modelName: string = this.MODEL_NAME,
     onProgress?: (progress: DownloadProgress) => void,
   ): Promise<{ success: boolean; error?: string }> {
     try {
@@ -297,7 +303,7 @@ export class LLMService {
   }
 
   /**
-   * Start Ollama service
+   * Start Ollama with the specific model using "ollama run"
    */
   static async startOllama(): Promise<{ success: boolean; error?: string }> {
     try {
@@ -317,16 +323,69 @@ export class LLMService {
         };
       }
 
-      console.log('Starting Ollama process:', ollamaExecutable);
+      console.log('Starting Ollama with model:', this.MODEL_NAME);
+      console.log('Executable path:', ollamaExecutable);
 
-      // Start Ollama process
+      // Add diagnostics for the executable
+      try {
+        const stats = await fs.promises.stat(ollamaExecutable);
+        console.log('Executable stats:', {
+          size: stats.size,
+          isFile: stats.isFile(),
+          mode: stats.mode.toString(8),
+          created: stats.birthtime,
+          modified: stats.mtime,
+        });
+
+        // Try to read the first few bytes to check if it's a valid binary
+        const buffer = await fs.promises.readFile(ollamaExecutable, {
+          encoding: null,
+        });
+        const firstBytes = buffer.slice(0, 4);
+        console.log('First 4 bytes of executable:', firstBytes.toString('hex'));
+
+        // Check if it's a Mach-O binary (macOS executable)
+        if (
+          firstBytes[0] === 0xcf &&
+          firstBytes[1] === 0xfa &&
+          firstBytes[2] === 0xed &&
+          firstBytes[3] === 0xfe
+        ) {
+          console.log('✓ Valid Mach-O 64-bit binary detected');
+        } else if (
+          firstBytes[0] === 0xce &&
+          firstBytes[1] === 0xfa &&
+          firstBytes[2] === 0xed &&
+          firstBytes[3] === 0xfe
+        ) {
+          console.log('✓ Valid Mach-O 32-bit binary detected');
+        } else {
+          console.log(
+            '⚠ Binary format might be invalid, first bytes:',
+            firstBytes,
+          );
+        }
+      } catch (diagError) {
+        console.warn('Could not diagnose executable:', diagError);
+      }
+
+      // Ensure the executable has proper permissions
+      try {
+        await fs.promises.chmod(ollamaExecutable, '755');
+      } catch (chmodError) {
+        console.warn('Could not set executable permissions:', chmodError);
+      }
+
+      // Try starting ollama serve first to see if the basic command works
+      console.log('Starting Ollama server...');
       this.ollamaProcess = spawn(ollamaExecutable, ['serve'], {
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: ['pipe', 'pipe', 'pipe'],
         env: {
           ...process.env,
           OLLAMA_HOST: '127.0.0.1:11434',
           OLLAMA_MODELS: this.modelsPath,
         },
+        detached: false,
       });
 
       // Handle process events
@@ -350,19 +409,58 @@ export class LLMService {
 
       if (this.ollamaProcess?.stderr) {
         this.ollamaProcess.stderr.on('data', (data) => {
-          console.log('Ollama stderr:', data.toString());
+          const output = data.toString();
+          console.log('Ollama stderr:', output);
         });
       }
 
-      // Wait a bit for the process to start
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Give the server time to start
+      console.log('Waiting for Ollama server to start...');
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Check if process is still running
       if (this.ollamaProcess && !this.ollamaProcess.killed) {
-        console.log('Ollama started successfully');
-        return { success: true };
+        console.log('Ollama server started successfully');
+
+        // Now try to pull the model using the API
+        try {
+          console.log('Attempting to pull model via API:', this.MODEL_NAME);
+          const stream = await this.ollamaClient.pull({
+            model: this.MODEL_NAME,
+            stream: true,
+          });
+
+          console.log('Model pull started, this may take a while...');
+
+          // Process the stream to show progress
+          for await (const part of stream) {
+            if (part.total && part.completed) {
+              const percentage = Math.round(
+                (part.completed / part.total) * 100,
+              );
+              console.log(`Model download progress: ${percentage}%`);
+            }
+
+            if (part.status === 'success') {
+              console.log('Model download completed successfully');
+              break;
+            }
+          }
+
+          return { success: true };
+        } catch (pullError) {
+          console.warn(
+            'Could not pull model via API, but server is running:',
+            pullError,
+          );
+          // Server is running even if model pull failed
+          return { success: true };
+        }
       } else {
-        return { success: false, error: 'Ollama process failed to start' };
+        return {
+          success: false,
+          error: 'Ollama process failed to start or exited immediately',
+        };
       }
     } catch (error) {
       console.error('Error starting Ollama:', error);
@@ -393,9 +491,36 @@ export class LLMService {
         for (const execName of possibleExecutables) {
           const execPath = path.join(this.ollamaPath, execName);
           try {
-            await stat(execPath);
-            console.log('Found Ollama executable at:', execPath);
-            return execPath;
+            const stats = await stat(execPath);
+            if (stats.isFile()) {
+              console.log('Found Ollama executable at:', execPath);
+
+              // Check if it's actually executable by trying to get its stats
+              try {
+                await fs.promises.access(
+                  execPath,
+                  fs.constants.F_OK | fs.constants.X_OK,
+                );
+                console.log('Executable is accessible and executable');
+                return execPath;
+              } catch (accessError) {
+                console.warn(
+                  `Executable found but not accessible: ${execPath}`,
+                  accessError,
+                );
+                // Try to make it executable
+                try {
+                  await fs.promises.chmod(execPath, '755');
+                  console.log('Fixed executable permissions');
+                  return execPath;
+                } catch (chmodError) {
+                  console.warn(
+                    'Could not fix executable permissions:',
+                    chmodError,
+                  );
+                }
+              }
+            }
           } catch {
             // Continue to next path
           }
@@ -431,9 +556,11 @@ export class LLMService {
         for (const execName of possibleExecutables) {
           const execPath = path.join(this.ollamaPath, execName);
           try {
-            await stat(execPath);
-            console.log('Found Ollama executable at:', execPath);
-            return execPath;
+            const stats = await stat(execPath);
+            if (stats.isFile()) {
+              console.log('Found Ollama executable at:', execPath);
+              return execPath;
+            }
           } catch {
             // Continue to next path
           }
@@ -456,9 +583,23 @@ export class LLMService {
         for (const execName of possibleExecutables) {
           const execPath = path.join(this.ollamaPath, execName);
           try {
-            await stat(execPath);
-            console.log('Found Ollama executable at:', execPath);
-            return execPath;
+            const stats = await stat(execPath);
+            if (stats.isFile()) {
+              console.log('Found Ollama executable at:', execPath);
+
+              // Ensure it's executable
+              try {
+                await fs.promises.chmod(execPath, '755');
+                console.log('Set executable permissions');
+              } catch (chmodError) {
+                console.warn(
+                  'Could not set executable permissions:',
+                  chmodError,
+                );
+              }
+
+              return execPath;
+            }
           } catch {
             // Continue to next path
           }
@@ -475,11 +616,28 @@ export class LLMService {
         if (ollamaFile) {
           const execPath = path.join(this.ollamaPath, ollamaFile);
           try {
-            await stat(execPath);
-            console.log('Found Ollama binary at:', execPath);
-            return execPath;
-          } catch {
-            // File exists but might not be executable
+            const stats = await stat(execPath);
+            if (stats.isFile()) {
+              console.log('Found Ollama binary at:', execPath);
+
+              // Ensure it's executable
+              try {
+                await fs.promises.chmod(execPath, '755');
+                console.log('Set executable permissions');
+              } catch (chmodError) {
+                console.warn(
+                  'Could not set executable permissions:',
+                  chmodError,
+                );
+              }
+
+              return execPath;
+            }
+          } catch (statError) {
+            console.warn(
+              `File exists but could not stat: ${execPath}`,
+              statError,
+            );
           }
         }
       }
@@ -627,15 +785,15 @@ export class LLMService {
   }
 
   /**
-   * Create a new chat session
+   * Create a new chat session (always uses the fixed model)
    */
-  static createChatSession(model: string): string {
+  static createChatSession(model: string = this.MODEL_NAME): string {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const session: ChatSession = {
       id: sessionId,
       messages: [],
-      model,
+      model: this.MODEL_NAME, // Always use the fixed model
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -704,7 +862,7 @@ export class LLMService {
         if (onStream) {
           // Handle streaming response using ollama-js
           const stream = await this.ollamaClient.chat({
-            model: session.model,
+            model: this.MODEL_NAME, // Always use the fixed model
             messages: messages,
             stream: true,
           });
@@ -720,7 +878,7 @@ export class LLMService {
         } else {
           // Handle non-streaming response using ollama-js
           const ollamaResponse = await this.ollamaClient.chat({
-            model: session.model,
+            model: this.MODEL_NAME, // Always use the fixed model
             messages: messages,
             stream: false,
           });
@@ -729,7 +887,7 @@ export class LLMService {
         }
       } else {
         // Simulate AI response when Ollama is not running
-        response = `This is a simulated response to: "${message}". The actual Ollama integration will be available once the service is running.`;
+        response = `This is a simulated response to: "${message}". The actual Ollama integration will be available once the service is running with model: ${this.MODEL_NAME}.`;
 
         // Simulate streaming
         if (onStream) {
@@ -834,5 +992,12 @@ export class LLMService {
     } catch (error) {
       console.warn('Error during DMG cleanup:', error);
     }
+  }
+
+  /**
+   * Get the fixed model name
+   */
+  static getModelName(): string {
+    return this.MODEL_NAME;
   }
 }
