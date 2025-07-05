@@ -1,6 +1,7 @@
 import { ipcMain, dialog } from 'electron';
 import { DatabaseService } from './database/services';
 import { FileManager } from './files/file-manager';
+import { LLMService } from './llm/LLM-Service';
 import * as path from 'path';
 import {
   SUBJECT_EVENTS,
@@ -9,7 +10,9 @@ import {
   TAG_EVENTS,
   EMBEDDING_EVENTS,
   FILE_SYSTEM_EVENTS,
+  DOWNLOAD_EVENTS,
   DIALOG_EVENTS,
+  LLM_EVENTS,
 } from '../constants/events';
 
 const handleError = (error: unknown): string => {
@@ -480,6 +483,193 @@ export function setupIpcHandlers() {
       return result;
     } catch (error) {
       return { canceled: true, filePaths: [] };
+    }
+  });
+
+  // Download handlers
+  ipcMain.handle(
+    DOWNLOAD_EVENTS.DOWNLOAD_FILES,
+    async (event, urls: string[], folderName?: string) => {
+      console.log('IPC: Download files request received:', urls);
+      if (folderName) {
+        console.log('IPC: Using custom folder:', folderName);
+      }
+
+      try {
+        const results = await FileManager.downloadFiles(
+          urls,
+          (progress) => {
+            console.log('IPC: Sending progress update:', progress);
+            // Send progress updates to renderer with download ID
+            event.sender.send(DOWNLOAD_EVENTS.PROGRESS, progress);
+          },
+          folderName,
+        );
+
+        console.log('IPC: Download results:', results);
+        return { success: true, data: results };
+      } catch (error) {
+        console.error('IPC: Download error:', error);
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(DOWNLOAD_EVENTS.GET_DOWNLOADED_FILES, async () => {
+    try {
+      const files = await FileManager.getDownloadedFiles();
+      return { success: true, data: files };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(
+    DOWNLOAD_EVENTS.DELETE_DOWNLOADED_FILE,
+    async (event, filename: string) => {
+      try {
+        const success = await FileManager.deleteDownloadedFile(filename);
+        return { success, data: { deleted: success } };
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(DOWNLOAD_EVENTS.GET_DOWNLOADS_PATH, async () => {
+    try {
+      const downloadsPath = FileManager.getDownloadsPath();
+      return { success: true, data: downloadsPath };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  // LLM handlers
+  ipcMain.handle(LLM_EVENTS.CHECK_OLLAMA_INSTALLED, async () => {
+    try {
+      const isInstalled = await LLMService.isOllamaInstalled();
+      return { success: true, data: isInstalled };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(LLM_EVENTS.START_OLLAMA, async () => {
+    try {
+      const result = await LLMService.startOllama();
+      return result;
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(LLM_EVENTS.DOWNLOAD_OLLAMA, async (event) => {
+    try {
+      const result = await LLMService.downloadOllama((progress) => {
+        event.sender.send(LLM_EVENTS.PROGRESS, progress);
+      });
+      return result;
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(
+    LLM_EVENTS.CHECK_MODEL_INSTALLED,
+    async (event, modelName: string) => {
+      try {
+        const isInstalled = await LLMService.isModelInstalled(modelName);
+        return { success: true, data: isInstalled };
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(LLM_EVENTS.GET_AVAILABLE_MODELS, async () => {
+    try {
+      const result = await LLMService.getAvailableModels();
+      return result;
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(
+    LLM_EVENTS.DOWNLOAD_MODEL,
+    async (event, modelName: string) => {
+      try {
+        const result = await LLMService.downloadModel(modelName, (progress) => {
+          event.sender.send(LLM_EVENTS.PROGRESS, progress);
+        });
+        return result;
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(LLM_EVENTS.START_CHAT, async (event, model: string) => {
+    try {
+      const sessionId = LLMService.createChatSession(model);
+      return { success: true, data: sessionId };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(
+    LLM_EVENTS.SEND_MESSAGE,
+    async (event, message: string, sessionId?: string) => {
+      try {
+        const result = await LLMService.sendMessage(
+          message,
+          sessionId,
+          (chunk) => {
+            event.sender.send(LLM_EVENTS.STREAM_RESPONSE, {
+              sessionId: sessionId || LLMService.getCurrentSession()?.id,
+              chunk,
+            });
+          },
+        );
+        return result;
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    LLM_EVENTS.GET_CHAT_HISTORY,
+    async (event, sessionId?: string) => {
+      try {
+        const history = LLMService.getChatHistory(sessionId);
+        return { success: true, data: history };
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    LLM_EVENTS.CLEAR_CHAT_HISTORY,
+    async (event, sessionId?: string) => {
+      try {
+        LLMService.clearChatHistory(sessionId);
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
+
+  ipcMain.handle(LLM_EVENTS.STOP_CHAT, async () => {
+    try {
+      await LLMService.stopOllama();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
     }
   });
 }

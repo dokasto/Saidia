@@ -56,9 +56,35 @@ export const FILE_SYSTEM_EVENTS = {
   CHECK_INITIALIZATION: 'file:checkInitialization',
 } as const;
 
+// Download Events
+export const DOWNLOAD_EVENTS = {
+  DOWNLOAD_FILES: 'download:files',
+  GET_DOWNLOADED_FILES: 'download:getFiles',
+  DELETE_DOWNLOADED_FILE: 'download:deleteFile',
+  GET_DOWNLOADS_PATH: 'download:getPath',
+  PROGRESS: 'download:progress',
+} as const;
+
 // Dialog Events
 export const DIALOG_EVENTS = {
   SHOW_OPEN_DIALOG: 'dialog:showOpenDialog',
+} as const;
+
+// LLM Events
+export const LLM_EVENTS = {
+  DOWNLOAD_OLLAMA: 'llm:downloadOllama',
+  CHECK_OLLAMA_INSTALLED: 'llm:checkOllamaInstalled',
+  START_OLLAMA: 'llm:startOllama',
+  DOWNLOAD_MODEL: 'llm:downloadModel',
+  CHECK_MODEL_INSTALLED: 'llm:checkModelInstalled',
+  GET_AVAILABLE_MODELS: 'llm:getAvailableModels',
+  START_CHAT: 'llm:startChat',
+  SEND_MESSAGE: 'llm:sendMessage',
+  STOP_CHAT: 'llm:stopChat',
+  GET_CHAT_HISTORY: 'llm:getChatHistory',
+  CLEAR_CHAT_HISTORY: 'llm:clearChatHistory',
+  PROGRESS: 'llm:progress',
+  STREAM_RESPONSE: 'llm:streamResponse',
 } as const;
 
 // All Events (for easy access)
@@ -69,5 +95,7 @@ export const IPC_EVENTS = {
   ...TAG_EVENTS,
   ...EMBEDDING_EVENTS,
   ...FILE_SYSTEM_EVENTS,
+  ...DOWNLOAD_EVENTS,
   ...DIALOG_EVENTS,
+  ...LLM_EVENTS,
 } as const;

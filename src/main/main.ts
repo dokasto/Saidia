@@ -17,6 +17,7 @@ import { resolveHtmlPath } from './util';
 import { initDatabase } from './database';
 import { setupIpcHandlers } from './ipc-handlers';
 import { FileManager } from './files/file-manager';
+import { LLMService } from './llm/LLM-Service';
 
 class AppUpdater {
   constructor() {
@@ -143,6 +144,9 @@ app
 
       await FileManager.initialize();
       console.log('File manager initialized successfully');
+
+      await LLMService.initialize();
+      console.log('LLM service initialized successfully');
 
       // Setup IPC handlers only after successful initialization
       setupIpcHandlers();

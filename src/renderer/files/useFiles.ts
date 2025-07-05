@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { FILE_EVENTS, FILE_SYSTEM_EVENTS } from '../../constants/events';
+import { useCallback, useEffect, useState } from 'react';
+import { FILE_SYSTEM_EVENTS } from '../../constants/events';
 
 interface DatabaseResponse<T = any> {
   success: boolean;
@@ -8,6 +8,34 @@ interface DatabaseResponse<T = any> {
 }
 
 export const useFiles = () => {
+  const [downloadProgress, setDownloadProgress] = useState<
+    Map<
+      string,
+      {
+        downloadId: string;
+        url: string;
+        downloaded: number;
+        total: number;
+        percentage: number;
+        filename?: string;
+        status: 'starting' | 'downloading' | 'completed' | 'error';
+      }
+    >
+  >(new Map());
+
+  // Set up download progress listener
+  useEffect(() => {
+    const unsubscribe = window.electron.download.onProgress((progress) => {
+      setDownloadProgress((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(progress.downloadId, progress);
+        return newMap;
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
   // File system operations
   const uploadFile = useCallback(
     async (filePath: string, subjectId: string) => {
@@ -53,12 +81,61 @@ export const useFiles = () => {
     ) as Promise<DatabaseResponse>;
   }, []);
 
+  // Download operations
+  const downloadFiles = useCallback(
+    async (urls: string[], folderName?: string) => {
+      console.log('Frontend: Starting download of URLs:', urls);
+      if (folderName) {
+        console.log('Frontend: Using custom folder:', folderName);
+      }
+      setDownloadProgress(new Map()); // Reset progress
+
+      try {
+        const result = await window.electron.download.downloadFiles(
+          urls,
+          folderName,
+        );
+        console.log('Frontend: Download result:', result);
+
+        // Keep the progress map for a while to show completion status
+        setTimeout(() => setDownloadProgress(new Map()), 5000);
+        return result as Promise<DatabaseResponse>;
+      } catch (error) {
+        console.error('Frontend: Download error:', error);
+        throw error;
+      }
+    },
+    [],
+  );
+
+  const getDownloadedFiles = useCallback(async () => {
+    return window.electron.download.getDownloadedFiles() as Promise<DatabaseResponse>;
+  }, []);
+
+  const deleteDownloadedFile = useCallback(async (filename: string) => {
+    return window.electron.download.deleteDownloadedFile(
+      filename,
+    ) as Promise<DatabaseResponse>;
+  }, []);
+
+  const getDownloadsPath = useCallback(async () => {
+    return window.electron.download.getDownloadsPath() as Promise<DatabaseResponse>;
+  }, []);
+
   return {
+    // File system operations
     uploadFile,
     getStoragePath,
     getAbsolutePath,
     fileExists,
     getFileInfo,
     checkFileManagerInitialization,
+
+    // Download operations
+    downloadFiles,
+    getDownloadedFiles,
+    deleteDownloadedFile,
+    getDownloadsPath,
+    downloadProgress,
   };
 };
