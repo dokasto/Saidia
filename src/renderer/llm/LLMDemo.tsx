@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLLM } from './useLLM';
 
 export function LLMDemo() {
@@ -17,6 +17,7 @@ export function LLMDemo() {
     downloadModel,
     startOllama,
     getAvailableModels,
+    getModelName,
     startChat,
     sendMessage,
     clearChatHistory,
@@ -24,7 +25,16 @@ export function LLMDemo() {
   } = useLLM();
 
   const [inputMessage, setInputMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemma2:2b');
+  const [modelName, setModelName] = useState('Loading...');
+
+  // Get the fixed model name on component mount
+  useEffect(() => {
+    const loadModelName = async () => {
+      const name = await getModelName();
+      setModelName(name);
+    };
+    loadModelName();
+  }, [getModelName]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !currentSessionId) return;
@@ -34,19 +44,27 @@ export function LLMDemo() {
   };
 
   const handleStartChat = async () => {
-    await startChat(selectedModel);
+    await startChat();
   };
 
   const handleDownloadModel = async () => {
-    await downloadModel(selectedModel);
+    await downloadModel();
   };
 
   const handleCheckModel = async () => {
-    await checkModelInstalled(selectedModel);
+    await checkModelInstalled();
   };
 
   const formatTimestamp = (timestamp: Date) => {
     return new Date(timestamp).toLocaleTimeString();
+  };
+
+  const getShortModelName = (fullName: string) => {
+    // Extract a shorter, more readable name from the full model name
+    if (fullName.includes('gemma-3n-E4B-it-GGUF')) {
+      return 'Gemma 3N E4B (GGUF)';
+    }
+    return fullName;
   };
 
   return (
@@ -122,23 +140,19 @@ export function LLMDemo() {
           </div>
 
           <div>
-            <h3 className="font-medium mb-2">Model Selection</h3>
+            <h3 className="font-medium mb-2">Model Status</h3>
+            <div className="mb-2">
+              <div className="text-sm text-gray-600 mb-1">Current Model:</div>
+              <div className="text-sm font-mono bg-gray-200 p-2 rounded">
+                {getShortModelName(modelName)}
+              </div>
+            </div>
             <div className="flex items-center gap-2 mb-2">
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="px-3 py-1 border rounded"
-              >
-                <option value="gemma2:2b">Gemma 2 (2B)</option>
-                <option value="llama3.2:3b">Llama 3.2 (3B)</option>
-                <option value="phi3:mini">Phi 3 Mini</option>
-                <option value="qwen2.5:1.5b">Qwen 2.5 (1.5B)</option>
-              </select>
               <button
                 onClick={handleCheckModel}
                 className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
               >
-                Check
+                Check Status
               </button>
             </div>
             <div className="flex items-center gap-2">
@@ -147,7 +161,7 @@ export function LLMDemo() {
                   isModelInstalled ? 'bg-green-500' : 'bg-red-500'
                 }`}
               />
-              <span>{isModelInstalled ? 'Installed' : 'Not Installed'}</span>
+              <span>{isModelInstalled ? 'Ready' : 'Not Available'}</span>
             </div>
             {!isModelInstalled && (
               <button
@@ -194,25 +208,24 @@ export function LLMDemo() {
           </div>
         </div>
 
-        {isOllamaInstalled &&
-          isOllamaRunning &&
-          isModelInstalled &&
-          !currentSessionId && (
-            <button
-              onClick={handleStartChat}
-              disabled={isLoading}
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-            >
-              Start Chat Session
-            </button>
-          )}
+        {isOllamaInstalled && isOllamaRunning && !currentSessionId && (
+          <button
+            onClick={handleStartChat}
+            disabled={isLoading}
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+          >
+            Start Chat Session
+          </button>
+        )}
       </div>
 
       {/* Chat Section */}
       {currentSessionId && (
         <div className="bg-white border rounded-lg">
           <div className="border-b p-4 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Chat with {selectedModel}</h2>
+            <h2 className="text-xl font-semibold">
+              Chat with {getShortModelName(modelName)}
+            </h2>
             <div className="flex gap-2">
               <button
                 onClick={() => clearChatHistory()}
@@ -302,13 +315,13 @@ export function LLMDemo() {
         <h3 className="font-medium mb-2">Instructions:</h3>
         <ol className="list-decimal list-inside space-y-1">
           <li>First, download Ollama if not already installed</li>
-          <li>Then, download a model (Gemma 2B is recommended for testing)</li>
+          <li>Start Ollama (this will automatically load the model)</li>
           <li>Start a chat session to begin talking with the AI</li>
           <li>Type messages and see the AI respond in real-time</li>
         </ol>
         <p className="mt-2 text-xs">
-          Note: This is a demo implementation. The actual Ollama integration
-          will be enhanced in future versions.
+          Note: The model ({getShortModelName(modelName)}) will be automatically
+          downloaded when you start Ollama if it's not already available.
         </p>
       </div>
     </div>

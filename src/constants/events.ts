@@ -78,6 +78,7 @@ export const LLM_EVENTS = {
   DOWNLOAD_MODEL: 'llm:downloadModel',
   CHECK_MODEL_INSTALLED: 'llm:checkModelInstalled',
   GET_AVAILABLE_MODELS: 'llm:getAvailableModels',
+  GET_MODEL_NAME: 'llm:getModelName',
   START_CHAT: 'llm:startChat',
   SEND_MESSAGE: 'llm:sendMessage',
   STOP_CHAT: 'llm:stopChat',

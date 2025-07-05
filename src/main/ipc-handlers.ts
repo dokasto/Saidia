@@ -596,6 +596,15 @@ export function setupIpcHandlers() {
     }
   });
 
+  ipcMain.handle(LLM_EVENTS.GET_MODEL_NAME, async () => {
+    try {
+      const modelName = LLMService.getModelName();
+      return { success: true, data: modelName };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
   ipcMain.handle(
     LLM_EVENTS.DOWNLOAD_MODEL,
     async (event, modelName: string) => {
