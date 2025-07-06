@@ -16,8 +16,8 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { initDatabase } from './database';
 import { setupIpcHandlers } from './ipc-handlers';
-import { FileManager } from './files/file-manager';
-import { LLMService } from './llm/LLM-Service';
+import FileManager from './files/file-manager';
+import LLMService from './llm/LLM-Service';
 
 class AppUpdater {
   constructor() {
@@ -78,8 +78,8 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
+    width: 1400,
+    height: 1200,
     title: 'Saidia',
     icon: getAssetPath('icon.png'),
     webPreferences: {

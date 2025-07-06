@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as os from 'os';
 import { spawn, ChildProcess } from 'child_process';
 import { promisify } from 'util';
-import { Ollama } from 'ollama';
-import { FileManager } from '../files/file-manager';
+import { Ollama, type Message, type Tool, type GenerateRequest } from 'ollama';
+import FileManager from '../files/file-manager';
 
 const mkdir = promisify(fs.mkdir);
 const stat = promisify(fs.stat);
@@ -35,7 +35,7 @@ export interface DownloadProgress {
   status: 'starting' | 'downloading' | 'completed' | 'error';
 }
 
-export class LLMService {
+export default class LLMService {
   private static ollamaPath: string;
   private static modelsPath: string;
   private static ollamaProcess: ChildProcess | null = null;
@@ -45,8 +45,20 @@ export class LLMService {
     host: 'http://127.0.0.1:11434',
   });
 
-  // Fixed model to use
-  private static readonly MODEL_NAME = 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:F16';
+  // Fixed model to use - direct Google Gemma 3n E4B IT model with full multimodal support
+  static readonly MODEL_NAME = 'hf.co/google/gemma-3n-E4B-it';
+
+  // Gemma 3n options optimized for the direct Google model
+  // Note: Full multimodal support requires direct Hugging Face Transformers usage
+  // Ollama interface currently supports text-only interactions
+  static readonly GEMMA3N_OPTIONS = {
+    temperature: 0.7, // Balanced creativity and coherence
+    top_p: 0.9, // Nucleus sampling for diverse outputs
+    top_k: 50, // Top-k sampling for quality
+    max_tokens: 32768, // 32K tokens as per Gemma 3n spec
+    do_sample: true, // Enable sampling for more natural responses
+    repetition_penalty: 1.1, // Prevent repetitive outputs
+  };
 
   // Fixed embedding model to use
   private static readonly EMBEDDING_MODEL_NAME = 'nomic-embed-text:v1.5';
@@ -212,7 +224,7 @@ export class LLMService {
   ): Promise<boolean> {
     try {
       // If Ollama is running, use the ollama-js library to check for models
-      if (this.isOllamaRunning()) {
+      if (await this.isOllamaRunning()) {
         const response = await this.ollamaClient.list();
         return (
           response.models?.some((model) => model.name.includes(modelName)) ||
@@ -247,7 +259,7 @@ export class LLMService {
       });
 
       // Check if Ollama is running
-      if (!this.isOllamaRunning()) {
+      if (!(await this.isOllamaRunning())) {
         return {
           success: false,
           error: 'Ollama is not running. Please start Ollama first.',
@@ -310,8 +322,9 @@ export class LLMService {
    */
   static async startOllama(): Promise<{ success: boolean; error?: string }> {
     try {
-      // Check if Ollama is already running
-      if (this.ollamaProcess && !this.ollamaProcess.killed) {
+      // Check if Ollama is already running (either by this app or externally)
+      const isRunning = await this.isOllamaRunning();
+      if (isRunning) {
         return { success: true };
       }
 
@@ -751,10 +764,30 @@ export class LLMService {
   }
 
   /**
-   * Check if Ollama is currently running
+   * Check if Ollama is actually running and accessible
    */
-  static isOllamaRunning(): boolean {
-    return this.ollamaProcess !== null && !this.ollamaProcess.killed;
+  static async isOllamaAccessible(): Promise<boolean> {
+    try {
+      // Try to connect to Ollama API
+      await this.ollamaClient.list();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if Ollama is running (either by this app or externally)
+   */
+  static async isOllamaRunning(): Promise<boolean> {
+    // First check if we have a process running
+    const hasInternalProcess =
+      this.ollamaProcess !== null && !this.ollamaProcess.killed;
+
+    // Then check if Ollama is accessible via API (could be running externally)
+    const isAccessible = await this.isOllamaAccessible();
+
+    return hasInternalProcess || isAccessible;
   }
 
   /**
@@ -766,7 +799,8 @@ export class LLMService {
     error?: string;
   }> {
     try {
-      if (!this.isOllamaRunning()) {
+      const isRunning = await this.isOllamaRunning();
+      if (!isRunning) {
         return { success: false, error: 'Ollama is not running' };
       }
 
@@ -855,7 +889,7 @@ export class LLMService {
       let response: string;
 
       // Use ollama-js library if available, otherwise simulate
-      if (this.isOllamaRunning()) {
+      if (await this.isOllamaRunning()) {
         // Convert session messages to Ollama format
         const messages = session.messages.map((msg) => ({
           role: msg.role,
@@ -868,6 +902,7 @@ export class LLMService {
             model: this.MODEL_NAME, // Always use the fixed model
             messages: messages,
             stream: true,
+            ...this.GEMMA3N_OPTIONS,
           });
 
           let fullResponse = '';
@@ -884,6 +919,7 @@ export class LLMService {
             model: this.MODEL_NAME, // Always use the fixed model
             messages: messages,
             stream: false,
+            ...this.GEMMA3N_OPTIONS,
           });
           response =
             ollamaResponse.message?.content || 'No response from model';
@@ -1017,7 +1053,7 @@ export class LLMService {
   static async isEmbeddingModelInstalled(): Promise<boolean> {
     try {
       // If Ollama is running, use the ollama-js library to check for models
-      if (this.isOllamaRunning()) {
+      if (await this.isOllamaRunning()) {
         const response = await this.ollamaClient.list();
         return (
           response.models?.some((model) =>
@@ -1051,11 +1087,17 @@ export class LLMService {
       });
 
       // Check if Ollama is running
-      if (!this.isOllamaRunning()) {
+      if (!(await this.isOllamaRunning())) {
         return {
           success: false,
           error: 'Ollama is not running. Please start Ollama first.',
         };
+      }
+
+      // Check if the embedding model is already installed
+      const isInstalled = await this.isEmbeddingModelInstalled();
+      if (isInstalled) {
+        return { success: true };
       }
 
       // Use ollama-js library to pull the embedding model with streaming
@@ -1120,7 +1162,7 @@ export class LLMService {
   }> {
     try {
       // Check if Ollama is running
-      if (!this.isOllamaRunning()) {
+      if (!(await this.isOllamaRunning())) {
         return {
           success: false,
           error: 'Ollama is not running. Please start Ollama first.',
@@ -1159,11 +1201,57 @@ export class LLMService {
    * Generate text with the LLM (non-streaming)
    */
   static async generate(
-    prompt: string,
+    request: GenerateRequest,
   ): Promise<{ success: boolean; response?: string; error?: string }> {
     try {
       // Check if Ollama is running
-      if (!this.isOllamaRunning()) {
+      if (!(await this.isOllamaRunning())) {
+        return {
+          success: false,
+          error: 'Ollama is not running. Please start Ollama first.',
+        };
+      }
+
+      // Check if model is installed (use model from request or default)
+      const modelToUse = request.model || this.MODEL_NAME;
+      const isInstalled = await this.isModelInstalled(modelToUse);
+      if (!isInstalled) {
+        return {
+          success: false,
+          error: `Model ${modelToUse} is not installed. Please download it first.`,
+        };
+      }
+
+      // Use ollama-js library to generate with the full request
+      const response = await this.ollamaClient.generate({
+        ...request,
+        stream: false,
+      });
+
+      return {
+        success: true,
+        response: response.response || 'No response from model',
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Chat with the LLM using full message structure (non-streaming)
+   */
+  static async chat(
+    messages: Message[],
+    options?: {
+      format?: string | object;
+      keep_alive?: string | number;
+      tools?: Tool[];
+      think?: boolean;
+    },
+  ): Promise<{ success: boolean; response?: string; error?: string }> {
+    try {
+      // Check if Ollama is running
+      if (!(await this.isOllamaRunning())) {
         return {
           success: false,
           error: 'Ollama is not running. Please start Ollama first.',
@@ -1179,16 +1267,81 @@ export class LLMService {
         };
       }
 
-      // Use ollama-js library to generate
-      const response = await this.ollamaClient.generate({
+      // Use ollama-js library to chat
+      const response = await this.ollamaClient.chat({
         model: this.MODEL_NAME,
-        prompt: prompt,
+        messages: messages,
         stream: false,
+        format: options?.format,
+        keep_alive: options?.keep_alive,
+        tools: options?.tools,
+        think: options?.think,
+        ...this.GEMMA3N_OPTIONS,
       });
 
       return {
         success: true,
-        response: response.response || 'No response from model',
+        response: response.message?.content || 'No response from model',
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Chat with the LLM using full message structure (streaming)
+   */
+  static async chatStream(
+    messages: Message[],
+    options?: {
+      format?: string | object;
+      keep_alive?: string | number;
+      tools?: Tool[];
+      think?: boolean;
+    },
+    onChunk?: (chunk: string) => void,
+  ): Promise<{ success: boolean; response?: string; error?: string }> {
+    try {
+      // Check if Ollama is running
+      if (!(await this.isOllamaRunning())) {
+        return {
+          success: false,
+          error: 'Ollama is not running. Please start Ollama first.',
+        };
+      }
+
+      // Check if model is installed
+      const isInstalled = await this.isModelInstalled();
+      if (!isInstalled) {
+        return {
+          success: false,
+          error: `Model ${this.MODEL_NAME} is not installed. Please download it first.`,
+        };
+      }
+
+      // Use ollama-js library to chat with streaming
+      const stream = await this.ollamaClient.chat({
+        model: this.MODEL_NAME,
+        messages: messages,
+        stream: true,
+        format: options?.format,
+        keep_alive: options?.keep_alive,
+        tools: options?.tools,
+        think: options?.think,
+        ...this.GEMMA3N_OPTIONS,
+      });
+
+      let fullResponse = '';
+      for await (const part of stream) {
+        if (part.message?.content) {
+          onChunk?.(part.message.content);
+          fullResponse += part.message.content;
+        }
+      }
+
+      return {
+        success: true,
+        response: fullResponse,
       };
     } catch (error) {
       return { success: false, error: String(error) };

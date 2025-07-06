@@ -1,7 +1,7 @@
 import { ipcMain, dialog } from 'electron';
 import { DatabaseService } from './database/services';
-import { FileManager } from './files/file-manager';
-import { LLMService } from './llm/LLM-Service';
+import FileManager from './files/file-manager';
+import LLMService from './llm/LLM-Service';
 import * as path from 'path';
 import {
   SUBJECT_EVENTS,
@@ -358,9 +358,9 @@ export function setupIpcHandlers() {
     }
   });
 
-  // File upload handlers
+  // File upload and process handler
   ipcMain.handle(
-    FILE_SYSTEM_EVENTS.UPLOAD,
+    FILE_SYSTEM_EVENTS.UPLOAD_AND_PROCESS,
     async (event, filePath: string, subjectId: string) => {
       try {
         console.log('=== File Upload Request ===');
@@ -370,6 +370,19 @@ export function setupIpcHandlers() {
         });
 
         const originalFilename = path.basename(filePath);
+
+        const doc = await FileManager.loadFile(filePath);
+
+        console.log('doc', doc);
+
+        return;
+
+        if (doc.length > 0) {
+          const embeddings = await FileManager.embed(doc);
+          return;
+        }
+
+        return;
 
         // Store the file using FileManager
         const fileInfo = await FileManager.storeFile(

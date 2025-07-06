@@ -6,6 +6,7 @@ import {
   DOWNLOAD_EVENTS,
   LLM_EVENTS,
 } from '../constants/events';
+import { FILE_EXTENSIONS } from '../constants/misc';
 
 export type Channels = 'ipc-example';
 
@@ -34,8 +35,17 @@ const electronHandler = {
     },
   },
   dialog: {
-    showOpenDialog: (options: any) => {
-      return ipcRenderer.invoke(DIALOG_EVENTS.SHOW_OPEN_DIALOG, options);
+    showOpenDialog: () => {
+      return ipcRenderer.invoke(DIALOG_EVENTS.SHOW_OPEN_DIALOG, {
+        title: 'Select a document',
+        properties: ['openFile'],
+        filters: [
+          {
+            name: 'Documents',
+            extensions: FILE_EXTENSIONS,
+          },
+        ],
+      });
     },
   },
   download: {

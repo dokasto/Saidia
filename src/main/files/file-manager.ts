@@ -6,15 +6,23 @@ import * as https from 'https';
 import * as http from 'http';
 import * as zlib from 'zlib';
 import { URL } from 'url';
+import parseDocx from './parse-docx';
+import parseMd from './parse-md';
+import { Section } from './parse-html';
+import parseOdt from './parse-odt';
+import parsePdf from './parse-pdf';
+import parseTxt from './parse-text';
+import LLMService from '../llm/LLM-Service';
 
 const copyFile = promisify(fs.copyFile);
 const mkdir = promisify(fs.mkdir);
 const unlink = promisify(fs.unlink);
 const stat = promisify(fs.stat);
+const readFile = promisify(fs.readFile);
 
 const DOWNLOAD_TIMEOUT = 43200000; // 12 hours in milliseconds
 
-export class FileManager {
+export default class FileManager {
   private static baseStoragePath: string;
 
   /**
@@ -56,6 +64,37 @@ export class FileManager {
       console.error('Error details:', error);
       this.baseStoragePath = ''; // Reset on failure
       throw error;
+    }
+  }
+
+  static async loadFile(filePath: string): Promise<Section[]> {
+    const fileExtension = path.extname(filePath).toLowerCase();
+    switch (fileExtension) {
+      case '.docx':
+        const docx = await readFile(filePath);
+        return await parseDocx(docx);
+      case '.md':
+        const markdown = await readFile(filePath, 'utf-8');
+        return parseMd(markdown);
+      case '.odt':
+        return await parseOdt(filePath);
+      case '.pdf':
+        return await parsePdf(filePath);
+      default:
+        // just try to parse it as a text file
+        const rawText = await readFile(filePath, 'utf-8');
+        return parseTxt(rawText);
+    }
+  }
+
+  static async embed(doc: Section[]): Promise<number[][]> {
+    const lines: string[] = doc.flatMap((section) => section.content);
+    const result = await LLMService.createEmbedding(lines);
+    if (result.success && result.embeddings) {
+      return result.embeddings;
+    } else {
+      console.error('Failed to create embedding:', result.error);
+      return [];
     }
   }
 

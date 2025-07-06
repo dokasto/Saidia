@@ -18,8 +18,8 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LLMDemo />} />
-          <Route path="/database" element={<DatabaseDemo />} />
-          <Route path="/downloads" element={<DownloadDemo />} />
+          {/* <Route path="/database" element={<DatabaseDemo />} />
+          <Route path="/downloads" element={<DownloadDemo />} /> */}
         </Routes>
       </Router>
     </MantineProvider>

@@ -1,0 +1,18 @@
+export const FILE_EXTENSIONS = [
+  'pdf',
+  'doc',
+  'docx',
+  'txt',
+  'jpg',
+  'jpeg',
+  'png',
+  'bmp',
+  'tiff',
+  'webp',
+  'md',
+  'heic',
+  'heif',
+  'heif-sequence',
+  'heic-sequence',
+  'heif-sequence',
+] as const;
