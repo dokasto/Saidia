@@ -723,4 +723,14 @@ export function setupIpcHandlers() {
       }
     },
   );
+
+  // Generate handler
+  ipcMain.handle(LLM_EVENTS.GENERATE, async (event, prompt: string) => {
+    try {
+      const result = await LLMService.generate(prompt);
+      return result;
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
 }

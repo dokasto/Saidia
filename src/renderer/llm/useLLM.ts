@@ -382,6 +382,21 @@ export function useLLM() {
     }
   }, []);
 
+  // Generate (non-streaming)
+  const generate = useCallback(async (prompt: string) => {
+    try {
+      const result = await window.electron.llm.generate(prompt);
+
+      if (result.success) {
+        return { success: true, response: result.response };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }, []);
+
   // Set up event listeners for progress and streaming
   useEffect(() => {
     const handleProgress = (progress: DownloadProgress) => {
@@ -440,5 +455,6 @@ export function useLLM() {
     loadChatHistory,
     clearChatHistory,
     createEmbedding,
+    generate,
   };
 }

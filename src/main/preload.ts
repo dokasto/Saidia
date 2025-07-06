@@ -127,6 +127,11 @@ const electronHandler = {
       return ipcRenderer.invoke(LLM_EVENTS.CREATE_EMBEDDING, input);
     },
 
+    // Generate functionality
+    generate: (prompt: string) => {
+      return ipcRenderer.invoke(LLM_EVENTS.GENERATE, prompt);
+    },
+
     // Event listeners
     onProgress: (callback: (progress: any) => void) => {
       const subscription = (_event: IpcRendererEvent, progress: any) =>

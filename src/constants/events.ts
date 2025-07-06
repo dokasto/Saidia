@@ -90,6 +90,7 @@ export const LLM_EVENTS = {
   DOWNLOAD_EMBEDDING_MODEL: 'llm:downloadEmbeddingModel',
   CHECK_EMBEDDING_MODEL_INSTALLED: 'llm:checkEmbeddingModelInstalled',
   CREATE_EMBEDDING: 'llm:createEmbedding',
+  GENERATE: 'llm:generate',
 } as const;
 
 // All Events (for easy access)

@@ -1154,4 +1154,44 @@ export class LLMService {
       return { success: false, error: String(error) };
     }
   }
+
+  /**
+   * Generate text with the LLM (non-streaming)
+   */
+  static async generate(
+    prompt: string,
+  ): Promise<{ success: boolean; response?: string; error?: string }> {
+    try {
+      // Check if Ollama is running
+      if (!this.isOllamaRunning()) {
+        return {
+          success: false,
+          error: 'Ollama is not running. Please start Ollama first.',
+        };
+      }
+
+      // Check if model is installed
+      const isInstalled = await this.isModelInstalled();
+      if (!isInstalled) {
+        return {
+          success: false,
+          error: `Model ${this.MODEL_NAME} is not installed. Please download it first.`,
+        };
+      }
+
+      // Use ollama-js library to generate
+      const response = await this.ollamaClient.generate({
+        model: this.MODEL_NAME,
+        prompt: prompt,
+        stream: false,
+      });
+
+      return {
+        success: true,
+        response: response.response || 'No response from model',
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
 }
