@@ -605,6 +605,15 @@ export function setupIpcHandlers() {
     }
   });
 
+  ipcMain.handle(LLM_EVENTS.GET_EMBEDDING_MODEL_NAME, async () => {
+    try {
+      const modelName = LLMService.getEmbeddingModelName();
+      return { success: true, data: modelName };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
   ipcMain.handle(
     LLM_EVENTS.DOWNLOAD_MODEL,
     async (event, modelName: string) => {
@@ -681,4 +690,37 @@ export function setupIpcHandlers() {
       return { success: false, error: handleError(error) };
     }
   });
+
+  // Embedding model handlers
+  ipcMain.handle(LLM_EVENTS.CHECK_EMBEDDING_MODEL_INSTALLED, async () => {
+    try {
+      const isInstalled = await LLMService.isEmbeddingModelInstalled();
+      return { success: true, data: isInstalled };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(LLM_EVENTS.DOWNLOAD_EMBEDDING_MODEL, async (event) => {
+    try {
+      const result = await LLMService.downloadEmbeddingModel((progress) => {
+        event.sender.send(LLM_EVENTS.PROGRESS, progress);
+      });
+      return result;
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
+
+  ipcMain.handle(
+    LLM_EVENTS.CREATE_EMBEDDING,
+    async (event, input: string | string[]) => {
+      try {
+        const result = await LLMService.createEmbedding(input);
+        return result;
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
 }

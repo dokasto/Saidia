@@ -79,6 +79,7 @@ export const LLM_EVENTS = {
   CHECK_MODEL_INSTALLED: 'llm:checkModelInstalled',
   GET_AVAILABLE_MODELS: 'llm:getAvailableModels',
   GET_MODEL_NAME: 'llm:getModelName',
+  GET_EMBEDDING_MODEL_NAME: 'llm:getEmbeddingModelName',
   START_CHAT: 'llm:startChat',
   SEND_MESSAGE: 'llm:sendMessage',
   STOP_CHAT: 'llm:stopChat',
@@ -86,6 +87,9 @@ export const LLM_EVENTS = {
   CLEAR_CHAT_HISTORY: 'llm:clearChatHistory',
   PROGRESS: 'llm:progress',
   STREAM_RESPONSE: 'llm:streamResponse',
+  DOWNLOAD_EMBEDDING_MODEL: 'llm:downloadEmbeddingModel',
+  CHECK_EMBEDDING_MODEL_INSTALLED: 'llm:checkEmbeddingModelInstalled',
+  CREATE_EMBEDDING: 'llm:createEmbedding',
 } as const;
 
 // All Events (for easy access)
