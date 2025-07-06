@@ -1,4 +1,4 @@
-import { vectorDb } from './config';
+import Connection from './connection';
 
 /**
  * Helper functions for working with sqlite-vec embeddings
@@ -17,7 +17,7 @@ export class EmbeddingsHelper {
     text: string,
     embedding: number[],
   ): void {
-    const stmt = vectorDb.prepare(`
+    const stmt = Connection.vectorDbInstance.prepare(`
       INSERT INTO embeddings (chunk_id, subject_id, file_id, chunk_index, text, embedding)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
@@ -67,7 +67,7 @@ export class EmbeddingsHelper {
     query += ` ORDER BY distance LIMIT ?`;
     params.push(limit);
 
-    const stmt = vectorDb.prepare(query);
+    const stmt = Connection.vectorDbInstance.prepare(query);
     return stmt.all(...params);
   }
 
@@ -75,7 +75,7 @@ export class EmbeddingsHelper {
    * Get embeddings by subject
    */
   static getEmbeddingsBySubject(subject_id: string): any[] {
-    const stmt = vectorDb.prepare(`
+    const stmt = Connection.vectorDbInstance.prepare(`
       SELECT * FROM embeddings WHERE subject_id = ?
     `);
     return stmt.all(subject_id);
@@ -85,7 +85,7 @@ export class EmbeddingsHelper {
    * Get embeddings by file
    */
   static getEmbeddingsByFile(file_id: string): any[] {
-    const stmt = vectorDb.prepare(`
+    const stmt = Connection.vectorDbInstance.prepare(`
       SELECT * FROM embeddings WHERE file_id = ?
     `);
     return stmt.all(file_id);
@@ -95,7 +95,7 @@ export class EmbeddingsHelper {
    * Delete embeddings by file
    */
   static deleteEmbeddingsByFile(file_id: string): void {
-    const stmt = vectorDb.prepare(`
+    const stmt = Connection.vectorDbInstance.prepare(`
       DELETE FROM embeddings WHERE file_id = ?
     `);
     stmt.run(file_id);
@@ -105,34 +105,9 @@ export class EmbeddingsHelper {
    * Delete embeddings by subject
    */
   static deleteEmbeddingsBySubject(subject_id: string): void {
-    const stmt = vectorDb.prepare(`
+    const stmt = Connection.vectorDbInstance.prepare(`
       DELETE FROM embeddings WHERE subject_id = ?
     `);
     stmt.run(subject_id);
-  }
-
-  /**
-   * Get total count of embeddings
-   */
-  static getEmbeddingsCount(subject_id?: string): number {
-    if (subject_id) {
-      const stmt = vectorDb.prepare(`
-        SELECT COUNT(*) as count FROM embeddings WHERE subject_id = ?
-      `);
-      return stmt.get(subject_id).count;
-    } else {
-      const stmt = vectorDb.prepare(`
-        SELECT COUNT(*) as count FROM embeddings
-      `);
-      return stmt.get().count;
-    }
-  }
-
-  /**
-   * Get sqlite-vec version
-   */
-  static getVersion(): string {
-    const stmt = vectorDb.prepare('SELECT vec_version() as version');
-    return stmt.get().version;
   }
 }

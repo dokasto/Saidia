@@ -42,8 +42,6 @@ export const EMBEDDING_EVENTS = {
   SEARCH_SIMILAR: 'db:searchSimilar',
   GET_BY_FILE: 'db:getEmbeddingsByFile',
   GET_BY_SUBJECT: 'db:getEmbeddingsBySubject',
-  GET_COUNT: 'db:getEmbeddingsCount',
-  GET_VECTOR_DB_VERSION: 'db:getVectorDbVersion',
 } as const;
 
 // File System Events

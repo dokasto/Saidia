@@ -72,13 +72,8 @@ export default class LLMService {
 
       const userDataPath = app.getPath('userData');
       // Use the same path structure as FileManager downloads
-      this.ollamaPath = path.join(
-        userDataPath,
-        'files',
-        'appDownloads',
-        'ollama',
-      );
-      this.modelsPath = path.join(userDataPath, 'models');
+      this.ollamaPath = path.join(userDataPath, 'files', 'ollama');
+      this.modelsPath = path.join(userDataPath, 'files', 'models');
 
       // Create directories
       await mkdir(this.ollamaPath, { recursive: true });

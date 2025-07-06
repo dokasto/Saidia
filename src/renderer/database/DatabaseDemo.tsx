@@ -146,12 +146,6 @@ export const DatabaseDemo: React.FC = () => {
       } else {
         setError(`Failed to load files: ${filesResult.error}`);
       }
-
-      // Get vector database version
-      const versionResult = await db.getVectorDbVersion();
-      if (versionResult.success) {
-        setVectorVersion(versionResult.data || 'Unknown');
-      }
     } catch (err) {
       setError(`Error loading data: ${(err as Error).message}`);
     } finally {

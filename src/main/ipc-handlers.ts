@@ -14,6 +14,7 @@ import {
   DIALOG_EVENTS,
   LLM_EVENTS,
 } from '../constants/events';
+import { type GenerateRequest } from 'ollama';
 
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -336,27 +337,6 @@ export function setupIpcHandlers() {
       }
     },
   );
-
-  ipcMain.handle(
-    EMBEDDING_EVENTS.GET_COUNT,
-    async (event, subject_id?: string) => {
-      try {
-        const count = await DatabaseService.getEmbeddingsCount(subject_id);
-        return { success: true, data: count };
-      } catch (error) {
-        return { success: false, error: handleError(error) };
-      }
-    },
-  );
-
-  ipcMain.handle(EMBEDDING_EVENTS.GET_VECTOR_DB_VERSION, async () => {
-    try {
-      const version = await DatabaseService.getVectorDbVersion();
-      return { success: true, data: version };
-    } catch (error) {
-      return { success: false, error: handleError(error) };
-    }
-  });
 
   // File upload and process handler
   ipcMain.handle(
@@ -738,12 +718,15 @@ export function setupIpcHandlers() {
   );
 
   // Generate handler
-  ipcMain.handle(LLM_EVENTS.GENERATE, async (event, prompt: string) => {
-    try {
-      const result = await LLMService.generate(prompt);
-      return result;
-    } catch (error) {
-      return { success: false, error: handleError(error) };
-    }
-  });
+  ipcMain.handle(
+    LLM_EVENTS.GENERATE,
+    async (event, prompt: GenerateRequest) => {
+      try {
+        const result = await LLMService.generate(prompt);
+        return result;
+      } catch (error) {
+        return { success: false, error: handleError(error) };
+      }
+    },
+  );
 }

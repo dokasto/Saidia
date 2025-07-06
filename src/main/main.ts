@@ -14,7 +14,6 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { initDatabase } from './database';
 import { setupIpcHandlers } from './ipc-handlers';
 import FileManager from './files/file-manager';
 import LLMService from './llm/LLM-Service';
@@ -139,18 +138,9 @@ app
     try {
       console.log('Starting system initialization...');
 
-      await initDatabase();
-      console.log('Database initialized successfully');
+      await Promise.all([FileManager.initialize(), LLMService.initialize()]);
 
-      await FileManager.initialize();
-      console.log('File manager initialized successfully');
-
-      await LLMService.initialize();
-      console.log('LLM service initialized successfully');
-
-      // Setup IPC handlers only after successful initialization
       setupIpcHandlers();
-      console.log('IPC handlers set up successfully');
 
       createWindow();
       app.on('activate', () => {
@@ -162,14 +152,12 @@ app
       console.error('CRITICAL: Failed to initialize systems:', error);
       console.error('Error details:', error);
 
-      // Show error dialog to user
       const { dialog } = require('electron');
       dialog.showErrorBox(
         'Initialization Error',
         `Failed to initialize application systems: ${(error as Error).message}\n\nPlease try restarting the application.`,
       );
 
-      // Exit the application if initialization fails
       app.quit();
     }
   })

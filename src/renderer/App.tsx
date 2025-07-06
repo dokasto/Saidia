@@ -17,7 +17,7 @@ export default function App() {
     <MantineProvider theme={theme}>
       <Router>
         <Routes>
-          <Route path="/" element={<LLMDemo />} />
+          <Route path="/" element={<DatabaseDemo />} />
           {/* <Route path="/database" element={<DatabaseDemo />} />
           <Route path="/downloads" element={<DownloadDemo />} /> */}
         </Routes>
