@@ -48,6 +48,9 @@ export class LLMService {
   // Fixed model to use
   private static readonly MODEL_NAME = 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:F16';
 
+  // Fixed embedding model to use
+  private static readonly EMBEDDING_MODEL_NAME = 'nomic-embed-text:v1.5';
+
   /**
    * Initialize the LLM service
    */
@@ -999,5 +1002,196 @@ export class LLMService {
    */
   static getModelName(): string {
     return this.MODEL_NAME;
+  }
+
+  /**
+   * Get the fixed embedding model name
+   */
+  static getEmbeddingModelName(): string {
+    return this.EMBEDDING_MODEL_NAME;
+  }
+
+  /**
+   * Check if embedding model is installed
+   */
+  static async isEmbeddingModelInstalled(): Promise<boolean> {
+    try {
+      // If Ollama is running, use the ollama-js library to check for models
+      if (this.isOllamaRunning()) {
+        const response = await this.ollamaClient.list();
+        return (
+          response.models?.some((model) =>
+            model.name.includes(this.EMBEDDING_MODEL_NAME),
+          ) || false
+        );
+      }
+
+      // Fallback to file system check
+      const files = await readdir(this.modelsPath);
+      return files.some((file) => file.includes(this.EMBEDDING_MODEL_NAME));
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Download the embedding model using Ollama's pull command
+   */
+  static async downloadEmbeddingModel(
+    onProgress?: (progress: DownloadProgress) => void,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      onProgress?.({
+        type: 'model',
+        filename: this.EMBEDDING_MODEL_NAME,
+        downloaded: 0,
+        total: 0,
+        percentage: 0,
+        status: 'starting',
+      });
+
+      // Check if Ollama is running
+      if (!this.isOllamaRunning()) {
+        return {
+          success: false,
+          error: 'Ollama is not running. Please start Ollama first.',
+        };
+      }
+
+      // Use ollama-js library to pull the embedding model with streaming
+      const stream = await this.ollamaClient.pull({
+        model: this.EMBEDDING_MODEL_NAME,
+        stream: true,
+      });
+
+      let totalSize = 0;
+      let downloadedSize = 0;
+
+      for await (const part of stream) {
+        if (part.total && part.completed) {
+          totalSize = part.total;
+          downloadedSize = part.completed;
+
+          onProgress?.({
+            type: 'model',
+            filename: this.EMBEDDING_MODEL_NAME,
+            downloaded: downloadedSize,
+            total: totalSize,
+            percentage: Math.round((downloadedSize / totalSize) * 100),
+            status: 'downloading',
+          });
+        }
+
+        if (part.status === 'success') {
+          onProgress?.({
+            type: 'model',
+            filename: this.EMBEDDING_MODEL_NAME,
+            downloaded: totalSize || downloadedSize,
+            total: totalSize || downloadedSize,
+            percentage: 100,
+            status: 'completed',
+          });
+          return { success: true };
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      onProgress?.({
+        type: 'model',
+        filename: this.EMBEDDING_MODEL_NAME,
+        downloaded: 0,
+        total: 0,
+        percentage: 0,
+        status: 'error',
+      });
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Create embeddings using Ollama's embed method
+   */
+  static async createEmbedding(input: string | string[]): Promise<{
+    success: boolean;
+    embedding?: number[];
+    embeddings?: number[][];
+    error?: string;
+  }> {
+    try {
+      // Check if Ollama is running
+      if (!this.isOllamaRunning()) {
+        return {
+          success: false,
+          error: 'Ollama is not running. Please start Ollama first.',
+        };
+      }
+
+      // Check if embedding model is installed
+      const isInstalled = await this.isEmbeddingModelInstalled();
+      if (!isInstalled) {
+        return {
+          success: false,
+          error: `Embedding model ${this.EMBEDDING_MODEL_NAME} is not installed. Please download it first.`,
+        };
+      }
+
+      // Use ollama-js library to create embeddings
+      const response = await this.ollamaClient.embed({
+        model: this.EMBEDDING_MODEL_NAME,
+        input: input,
+      });
+
+      // Handle single text vs array of texts
+      if (Array.isArray(input)) {
+        // Return all embeddings for batch processing
+        return { success: true, embeddings: response.embeddings };
+      } else {
+        // Return the first (and only) embedding for single text
+        return { success: true, embedding: response.embeddings[0] };
+      }
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+
+  /**
+   * Generate text with the LLM (non-streaming)
+   */
+  static async generate(
+    prompt: string,
+  ): Promise<{ success: boolean; response?: string; error?: string }> {
+    try {
+      // Check if Ollama is running
+      if (!this.isOllamaRunning()) {
+        return {
+          success: false,
+          error: 'Ollama is not running. Please start Ollama first.',
+        };
+      }
+
+      // Check if model is installed
+      const isInstalled = await this.isModelInstalled();
+      if (!isInstalled) {
+        return {
+          success: false,
+          error: `Model ${this.MODEL_NAME} is not installed. Please download it first.`,
+        };
+      }
+
+      // Use ollama-js library to generate
+      const response = await this.ollamaClient.generate({
+        model: this.MODEL_NAME,
+        prompt: prompt,
+        stream: false,
+      });
+
+      return {
+        success: true,
+        response: response.response || 'No response from model',
+      };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
   }
 }

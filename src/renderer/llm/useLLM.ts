@@ -21,6 +21,7 @@ export interface LLMState {
   isOllamaInstalled: boolean;
   isOllamaRunning: boolean;
   isModelInstalled: boolean;
+  isEmbeddingModelInstalled: boolean;
   currentSessionId: string | null;
   messages: ChatMessage[];
   isLoading: boolean;
@@ -35,6 +36,7 @@ export function useLLM() {
     isOllamaInstalled: false,
     isOllamaRunning: false,
     isModelInstalled: false,
+    isEmbeddingModelInstalled: false,
     currentSessionId: null,
     messages: [],
     isLoading: false,
@@ -47,9 +49,7 @@ export function useLLM() {
   // Get the fixed model name from the service
   const getModelName = useCallback(async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.GET_MODEL_NAME,
-      );
+      const result = await window.electron.llm.getModelName();
       if (result.success) {
         return result.data;
       }
@@ -59,12 +59,23 @@ export function useLLM() {
     return 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:F16'; // fallback
   }, []);
 
+  // Get the fixed embedding model name from the service
+  const getEmbeddingModelName = useCallback(async () => {
+    try {
+      const result = await window.electron.llm.getEmbeddingModelName();
+      if (result.success) {
+        return result.data;
+      }
+    } catch (error) {
+      console.error('Failed to get embedding model name:', error);
+    }
+    return 'nomic-embed-text:v1.5'; // fallback
+  }, []);
+
   // Check if Ollama is installed
   const checkOllamaInstalled = useCallback(async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.CHECK_OLLAMA_INSTALLED,
-      );
+      const result = await window.electron.llm.checkOllamaInstalled();
       if (result.success) {
         setState((prev) => ({ ...prev, isOllamaInstalled: result.data }));
       }
@@ -76,10 +87,7 @@ export function useLLM() {
   // Check if the fixed model is installed
   const checkModelInstalled = useCallback(async (modelName?: string) => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.CHECK_MODEL_INSTALLED,
-        modelName, // If no model name provided, service will use the fixed model
-      );
+      const result = await window.electron.llm.checkModelInstalled(modelName);
       if (result.success) {
         setState((prev) => ({ ...prev, isModelInstalled: result.data }));
       }
@@ -88,12 +96,25 @@ export function useLLM() {
     }
   }, []);
 
+  // Check if the embedding model is installed
+  const checkEmbeddingModelInstalled = useCallback(async () => {
+    try {
+      const result = await window.electron.llm.checkEmbeddingModelInstalled();
+      if (result.success) {
+        setState((prev) => ({
+          ...prev,
+          isEmbeddingModelInstalled: result.data,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to check embedding model installation:', error);
+    }
+  }, []);
+
   // Get available models
   const getAvailableModels = useCallback(async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.GET_AVAILABLE_MODELS,
-      );
+      const result = await window.electron.llm.getAvailableModels();
       if (result.success) {
         const models = result.models || [];
         setState((prev) => ({ ...prev, availableModels: models }));
@@ -113,9 +134,7 @@ export function useLLM() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.START_OLLAMA,
-      );
+      const result = await window.electron.llm.startOllama();
 
       if (result.success) {
         setState((prev) => ({
@@ -146,9 +165,7 @@ export function useLLM() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.DOWNLOAD_OLLAMA,
-      );
+      const result = await window.electron.llm.downloadOllama();
 
       if (result.success) {
         setState((prev) => ({
@@ -180,10 +197,7 @@ export function useLLM() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.DOWNLOAD_MODEL,
-        modelName, // If no model name provided, service will use the fixed model
-      );
+      const result = await window.electron.llm.downloadModel(modelName);
 
       if (result.success) {
         setState((prev) => ({
@@ -210,15 +224,44 @@ export function useLLM() {
     }
   }, []);
 
+  // Download the embedding model
+  const downloadEmbeddingModel = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const result = await window.electron.llm.downloadEmbeddingModel();
+
+      if (result.success) {
+        setState((prev) => ({
+          ...prev,
+          isEmbeddingModelInstalled: true,
+          isLoading: false,
+          downloadProgress: null,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error: result.error || 'Embedding model download failed',
+          isLoading: false,
+          downloadProgress: null,
+        }));
+      }
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: String(error),
+        isLoading: false,
+        downloadProgress: null,
+      }));
+    }
+  }, []);
+
   // Start a chat session (no model parameter needed since it's fixed)
   const startChat = useCallback(async (model?: string) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.START_CHAT,
-        model, // Service will use the fixed model
-      );
+      const result = await window.electron.llm.startChat(model);
 
       if (result.success) {
         setState((prev) => ({
@@ -259,8 +302,7 @@ export function useLLM() {
       }));
 
       try {
-        const result = await window.electron.ipcRenderer.invoke(
-          LLM_EVENTS.SEND_MESSAGE,
+        const result = await window.electron.llm.sendMessage(
           message,
           sessionId,
         );
@@ -298,10 +340,7 @@ export function useLLM() {
   // Load chat history
   const loadChatHistory = useCallback(async (sessionId?: string) => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.GET_CHAT_HISTORY,
-        sessionId,
-      );
+      const result = await window.electron.llm.getChatHistory(sessionId);
 
       if (result.success) {
         setState((prev) => ({ ...prev, messages: result.data }));
@@ -314,10 +353,7 @@ export function useLLM() {
   // Clear chat history
   const clearChatHistory = useCallback(async (sessionId?: string) => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        LLM_EVENTS.CLEAR_CHAT_HISTORY,
-        sessionId,
-      );
+      const result = await window.electron.llm.clearChatHistory(sessionId);
 
       if (result.success) {
         setState((prev) => ({ ...prev, messages: [] }));
@@ -327,15 +363,50 @@ export function useLLM() {
     }
   }, []);
 
+  // Create embedding
+  const createEmbedding = useCallback(async (input: string | string[]) => {
+    try {
+      const result = await window.electron.llm.createEmbedding(input);
+
+      if (result.success) {
+        if (Array.isArray(input)) {
+          return { success: true, embeddings: result.embeddings };
+        } else {
+          return { success: true, embedding: result.embedding };
+        }
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }, []);
+
+  // Generate (non-streaming)
+  const generate = useCallback(async (prompt: string) => {
+    try {
+      const result = await window.electron.llm.generate(prompt);
+
+      if (result.success) {
+        return { success: true, response: result.response };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }, []);
+
   // Set up event listeners for progress and streaming
   useEffect(() => {
-    const handleProgress = (...args: unknown[]) => {
-      const progress = args[0] as DownloadProgress;
+    const handleProgress = (progress: DownloadProgress) => {
       setState((prev) => ({ ...prev, downloadProgress: progress }));
     };
 
-    const handleStreamResponse = (...args: unknown[]) => {
-      const data = args[0] as { sessionId: string; chunk: string };
+    const handleStreamResponse = (data: {
+      sessionId: string;
+      chunk: string;
+    }) => {
       setState((prev) => ({
         ...prev,
         streamingMessage: prev.streamingMessage + data.chunk,
@@ -343,18 +414,14 @@ export function useLLM() {
     };
 
     // Add event listeners
-    window.electron.ipcRenderer.on(LLM_EVENTS.PROGRESS, handleProgress);
-    window.electron.ipcRenderer.on(
-      LLM_EVENTS.STREAM_RESPONSE,
-      handleStreamResponse,
-    );
+    const progressUnsubscribe = window.electron.llm.onProgress(handleProgress);
+    const streamUnsubscribe =
+      window.electron.llm.onStreamResponse(handleStreamResponse);
 
     // Cleanup
     return () => {
-      window.electron.ipcRenderer.removeAllListeners(LLM_EVENTS.PROGRESS);
-      window.electron.ipcRenderer.removeAllListeners(
-        LLM_EVENTS.STREAM_RESPONSE,
-      );
+      progressUnsubscribe();
+      streamUnsubscribe();
     };
   }, []);
 
@@ -363,6 +430,11 @@ export function useLLM() {
     checkOllamaInstalled();
   }, [checkOllamaInstalled]);
 
+  // Initialize by checking embedding model installation
+  useEffect(() => {
+    checkEmbeddingModelInstalled();
+  }, [checkEmbeddingModelInstalled]);
+
   return {
     // State
     ...state,
@@ -370,14 +442,19 @@ export function useLLM() {
     // Actions
     checkOllamaInstalled,
     checkModelInstalled,
+    checkEmbeddingModelInstalled,
     getAvailableModels,
     getModelName,
+    getEmbeddingModelName,
     startOllama,
     downloadOllama,
     downloadModel,
+    downloadEmbeddingModel,
     startChat,
     sendMessage,
     loadChatHistory,
     clearChatHistory,
+    createEmbedding,
+    generate,
   };
 }
