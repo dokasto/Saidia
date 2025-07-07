@@ -3,7 +3,7 @@ import * as sqliteVec from 'sqlite-vec';
 import Database, { Database as DatabaseType } from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
-import fs from 'fs';
+import { ensureDirectory } from '../util';
 
 class Connection {
   vectorDbInstance: DatabaseType;
@@ -17,7 +17,7 @@ class Connection {
       'database.db',
     );
 
-    this.ensureDatabaseDirectory(dbPath);
+    ensureDirectory(dbPath);
 
     this.vectorDbInstance = new Database(dbPath);
     sqliteVec.load(this.vectorDbInstance);
@@ -72,19 +72,6 @@ class Connection {
     } catch (error) {
       console.error('Unable to connect to the database:', error);
       throw error;
-    }
-  }
-
-  private ensureDatabaseDirectory(dbPath: string): void {
-    const dbDir = path.dirname(dbPath);
-    if (!fs.existsSync(dbDir)) {
-      try {
-        fs.mkdirSync(dbDir, { recursive: true });
-        console.log('Database directory created:', dbDir);
-      } catch (error) {
-        console.error('Failed to create database directory:', error);
-        throw error;
-      }
     }
   }
 }

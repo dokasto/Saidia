@@ -1,4 +1,4 @@
-import LLMService from '../llm/LLM-Service';
+import LLMService from '../llm/services';
 import parseMd from './parse-md';
 import { Section } from './parse-html';
 import fs from 'fs/promises';

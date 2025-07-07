@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import * as stylex from '@stylexjs/stylex';
-import { Loader, Text } from '@mantine/core';
+import { Loader, Text, Progress } from '@mantine/core';
+import { LLMServiceProgress } from '../main/llm/services';
 
 export default function SplashScreen() {
+  const [progress, setProgress] = useState<LLMServiceProgress | null>(null);
+
+  const handleProgress = useCallback(
+    (progress: LLMServiceProgress) => {
+      setProgress(progress);
+    },
+    [setProgress],
+  );
+
+  useEffect(() => {
+    window.electron.llm.onProgress(handleProgress);
+    window.electron.llm.init();
+  }, [handleProgress]);
+
   return (
     <div {...stylex.props(styles.container)}>
       <div {...stylex.props(styles.content)}>
@@ -10,10 +25,25 @@ export default function SplashScreen() {
         <Text size="lg" fw={500}>
           AI Teacher's Assistants
         </Text>
-        <div {...stylex.props(styles.loaderContent)}>
-          <Loader color="gray" size="xs" />
-          <Text size="xs">Setting up, please wait...</Text>
-        </div>
+        {progress?.completed !== true && (
+          <div {...stylex.props(styles.loaderContent)}>
+            {progress?.percentage && progress.percentage > 0 ? (
+              <div {...stylex.props(styles.progress)}>
+                <Progress.Root size={18}>
+                  <Progress.Section value={progress.percentage} color="gray">
+                    <Progress.Label>{progress.percentage}%</Progress.Label>
+                  </Progress.Section>
+                </Progress.Root>
+              </div>
+            ) : (
+              <Loader color="gray" size={18} />
+            )}
+
+            <Text size="xs">
+              {progress?.status || 'Setting up, please wait...'}
+            </Text>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -25,10 +55,14 @@ const styles = stylex.create({
     flexDirection: 'column',
     textAlign: 'center',
   },
+  progress: {
+    width: '100%',
+  },
   loaderContent: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'column',
     gap: 8,
     marginTop: 16,
   },

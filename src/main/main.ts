@@ -14,9 +14,9 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { setupIpcHandlers } from './ipc-handlers';
+import setupIpcHandlers from './setup-ipc-handlers';
+import { APP_NAME } from '../constants/misc';
 import FileManager from './files/file-manager';
-import LLMService from './llm/LLM-Service';
 
 class AppUpdater {
   constructor() {
@@ -42,8 +42,7 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-// Set the application name
-app.setName('Saidia');
+app.setName(APP_NAME);
 
 if (isDebug) {
   require('electron-debug').default();
@@ -79,7 +78,7 @@ const createWindow = async () => {
     show: false,
     width: 1400,
     height: 1200,
-    title: 'Saidia',
+    title: APP_NAME,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
@@ -138,7 +137,7 @@ app
     try {
       console.log('Starting system initialization...');
 
-      await Promise.all([FileManager.initialize(), LLMService.initialize()]);
+      await Promise.all([FileManager.init()]);
 
       setupIpcHandlers();
 

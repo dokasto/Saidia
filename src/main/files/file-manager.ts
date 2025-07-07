@@ -12,7 +12,7 @@ import { Section } from './parse-html';
 import parseOdt from './parse-odt';
 import parsePdf from './parse-pdf';
 import parseTxt from './parse-text';
-import LLMService from '../llm/LLM-Service';
+import LLMService from '../llm/services';
 
 const copyFile = promisify(fs.copyFile);
 const mkdir = promisify(fs.mkdir);
@@ -28,7 +28,7 @@ export default class FileManager {
   /**
    * Initialize the file manager and create necessary directories
    */
-  static async initialize(): Promise<void> {
+  static async init(): Promise<void> {
     try {
       console.log('=== FileManager Initialization Starting ===');
 
@@ -514,16 +514,7 @@ export default class FileManager {
       throw new Error('At least one URL must be provided');
     }
 
-    // Create downloads directory (with optional subfolder)
-    const baseDownloadsPath = this.getDownloadsPath();
-    const downloadsPath = folderName
-      ? path.join(baseDownloadsPath, folderName)
-      : baseDownloadsPath;
-
-    console.log(`Creating downloads directory: ${downloadsPath}`);
-    if (folderName) {
-      console.log(`Using custom folder: ${folderName}`);
-    }
+    const downloadsPath = folderName ?? this.getDownloadsPath();
 
     try {
       await mkdir(downloadsPath, { recursive: true });
