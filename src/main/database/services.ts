@@ -3,7 +3,7 @@ import { EmbeddingsHelper } from './embeddings-helper';
 import FileManager from '../files/file-manager';
 import Connection from './connection';
 
-export class DatabaseService {
+export default class DatabaseService {
   // Subject operations
   static async createSubject(subject_id: string, name: string) {
     const subject = await Subject.create({ subject_id, name });

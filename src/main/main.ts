@@ -16,7 +16,7 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import setupIpcHandlers from './setup-ipc-handlers';
 import { APP_NAME } from '../constants/misc';
-import FileManager from './files/file-manager';
+import Connection from './database/connection';
 
 class AppUpdater {
   constructor() {
@@ -133,13 +133,18 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(async () => {
-    // Initialize database and file manager before creating window
     try {
       console.log('Starting system initialization...');
 
-      await Promise.all([FileManager.init()]);
+      // Initialize database first
+      console.log('Initializing database...');
+      await Connection.initDatabase();
+      console.log('Database initialized successfully.');
 
+      // Set up IPC handlers after database is ready
+      console.log('Setting up IPC handlers...');
       setupIpcHandlers();
+      console.log('IPC handlers set up successfully.');
 
       createWindow();
       app.on('activate', () => {

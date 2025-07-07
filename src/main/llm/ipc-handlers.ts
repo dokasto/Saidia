@@ -1,7 +1,6 @@
 import { ipcMain } from 'electron';
 import LLMService from './services';
 import { LLM_EVENTS } from '../../constants/events';
-import { type GenerateRequest } from 'ollama';
 
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -27,22 +26,19 @@ export default function setupLLMIPCHandlers() {
     async (event, input: string | string[]) => {
       try {
         const result = await LLMService.createEmbedding(input);
-        return result;
+        return { success: true, data: result };
       } catch (error) {
         return { success: false, error: handleError(error) };
       }
     },
   );
 
-  ipcMain.handle(
-    LLM_EVENTS.GENERATE,
-    async (event, prompt: GenerateRequest) => {
-      try {
-        const result = await LLMService.generate(prompt);
-        return result;
-      } catch (error) {
-        return { success: false, error: handleError(error) };
-      }
-    },
-  );
+  ipcMain.handle(LLM_EVENTS.GENERATE, async (event, request: any) => {
+    try {
+      const result = await LLMService.generate(request);
+      return { success: true, data: result };
+    } catch (error) {
+      return { success: false, error: handleError(error) };
+    }
+  });
 }

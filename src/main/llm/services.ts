@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { spawn, ChildProcess } from 'child_process';
-import { Ollama, type GenerateRequest } from 'ollama';
+import { ChatRequest, Ollama, type GenerateRequest } from 'ollama';
 import FileManager from '../files/file-manager';
 import { copyDirectory, ensureDirectory } from '../util';
 import {
@@ -51,7 +51,11 @@ export default class LLMServices {
 
       onProgress?.({ status: 'Try to download models' });
       await this.downloadModels(
-        [MODELS.GEMMA_3N_E4B_IT, MODELS.NOMIC_EMBED_TEXT_V1_5],
+        [
+          MODELS.GEMMA_3N_E4B_IT_FP16,
+          MODELS.NOMIC_EMBED_TEXT_V1_5,
+          MODELS.GEMMA_3_12B_IT_QAT,
+        ],
         onProgress,
       );
 
@@ -121,6 +125,7 @@ export default class LLMServices {
 
     const result = await FileManager.downloadFiles(
       [url],
+      this.ollamaPath,
       (progress) => {
         onProgress?.({
           filename: progress.filename || filename,
@@ -130,7 +135,6 @@ export default class LLMServices {
           status: 'downloading ollama',
         });
       },
-      this.ollamaPath,
     );
 
     if (result[0]?.success) {
@@ -644,6 +648,7 @@ export default class LLMServices {
         response: response.response || 'No response from model',
       };
     } catch (error) {
+      console.error(`failed to generate: ${error}`);
       return { success: false, error: String(error) };
     }
   }

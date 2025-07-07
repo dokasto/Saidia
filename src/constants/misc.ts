@@ -1,22 +1,25 @@
 export const APP_NAME = 'Saidia';
 
-export const FILE_EXTENSIONS = [
-  'pdf',
-  'doc',
-  'docx',
-  'txt',
+export const IMAGE_EXTENSIONS = [
   'jpg',
   'jpeg',
   'png',
   'bmp',
   'tiff',
   'webp',
-  'md',
   'heic',
   'heif',
   'heif-sequence',
   'heic-sequence',
-  'heif-sequence',
+] as const;
+
+export const FILE_EXTENSIONS = [
+  'pdf',
+  'doc',
+  'docx',
+  'txt',
+  'md',
+  ...IMAGE_EXTENSIONS,
 ] as const;
 
 export const PLATFORMS = {
@@ -44,8 +47,9 @@ export const OLLAMA_DOWNLOAD_URLS = {
 } as const;
 
 export const MODELS = {
-  GEMMA_3N_E4B_IT: 'gemma3n:e4b',
+  GEMMA_3N_E4B_IT_FP16: 'gemma3n:e4b-it-fp16',
   NOMIC_EMBED_TEXT_V1_5: 'nomic-embed-text:v1.5',
+  GEMMA_3_12B_IT_QAT: 'gemma3:12b-it-qat',
 } as const;
 
 export const GEMMA3N_OPTIONS = {

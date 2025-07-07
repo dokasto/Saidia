@@ -81,6 +81,36 @@ export const useFiles = () => {
     ) as Promise<DatabaseResponse>;
   }, []);
 
+  // Subject-specific file operations
+  const getSubjectFilePath = useCallback(
+    async (subjectId: string, filename: string) => {
+      return window.electron.ipcRenderer.invoke(
+        FILE_SYSTEM_EVENTS.GET_SUBJECT_FILE_PATH,
+        subjectId,
+        filename,
+      ) as Promise<DatabaseResponse>;
+    },
+    [],
+  );
+
+  const listSubjectFiles = useCallback(async (subjectId: string) => {
+    return window.electron.ipcRenderer.invoke(
+      FILE_SYSTEM_EVENTS.LIST_SUBJECT_FILES,
+      subjectId,
+    ) as Promise<DatabaseResponse>;
+  }, []);
+
+  const deleteSubjectFile = useCallback(
+    async (subjectId: string, filename: string) => {
+      return window.electron.ipcRenderer.invoke(
+        FILE_SYSTEM_EVENTS.DELETE_SUBJECT_FILE,
+        subjectId,
+        filename,
+      ) as Promise<DatabaseResponse>;
+    },
+    [],
+  );
+
   // Download operations
   const downloadFiles = useCallback(
     async (urls: string[], folderName?: string) => {
@@ -130,6 +160,11 @@ export const useFiles = () => {
     fileExists,
     getFileInfo,
     checkFileManagerInitialization,
+
+    // Subject-specific file operations
+    getSubjectFilePath,
+    listSubjectFiles,
+    deleteSubjectFile,
 
     // Download operations
     downloadFiles,

@@ -13,26 +13,18 @@ export class EmbeddingsHelper {
     chunk_id: string,
     subject_id: string,
     file_id: string,
-    chunk_index: number,
     text: string,
     embedding: number[],
   ): void {
     const stmt = Connection.vectorDbInstance.prepare(`
-      INSERT INTO embeddings (chunk_id, subject_id, file_id, chunk_index, text, embedding)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO embeddings (chunk_id, subject_id, file_id, text, embedding)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     // Convert embedding array to Float32Array for sqlite-vec
     const embeddingFloat32 = new Float32Array(embedding);
 
-    stmt.run(
-      chunk_id,
-      subject_id,
-      file_id,
-      chunk_index,
-      text,
-      embeddingFloat32,
-    );
+    stmt.run(chunk_id, subject_id, file_id, text, embeddingFloat32);
   }
 
   /**
@@ -50,7 +42,6 @@ export class EmbeddingsHelper {
         chunk_id,
         subject_id,
         file_id,
-        chunk_index,
         text,
         distance
       FROM embeddings

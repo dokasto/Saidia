@@ -1,6 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 
 export function resolveHtmlPath(htmlFileName: string) {
   if (process.env.NODE_ENV === 'development') {
@@ -13,11 +14,10 @@ export function resolveHtmlPath(htmlFileName: string) {
 }
 
 export function ensureDirectory(dirPath: string): void {
-  const fullDirPath = path.dirname(dirPath);
-  if (!fs.existsSync(fullDirPath)) {
+  if (!fs.existsSync(dirPath)) {
     try {
-      fs.mkdirSync(fullDirPath, { recursive: true });
-      console.log('Directory created:', fullDirPath);
+      fs.mkdirSync(dirPath, { recursive: true });
+      console.log('Directory created:', dirPath);
     } catch (error) {
       console.error('Failed to create directory:', error);
       throw error;
@@ -50,4 +50,8 @@ export async function copyDirectory(
       }
     }
   }
+}
+
+export function uniqueID(): string {
+  return crypto.randomUUID();
 }
