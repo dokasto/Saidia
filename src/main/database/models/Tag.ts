@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config';
+import Connection from '../connection';
 
 interface TagAttributes {
   tag_id: number;
@@ -33,7 +33,7 @@ Tag.init(
     },
   },
   {
-    sequelize,
+    sequelize: Connection.sequelizeInstance,
     modelName: 'Tag',
     tableName: 'tags',
     timestamps: false,

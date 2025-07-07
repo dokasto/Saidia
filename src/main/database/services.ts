@@ -1,7 +1,7 @@
 import { Subject, File, Question, Tag, QuestionTag } from './models';
 import { EmbeddingsHelper } from './embeddings-helper';
-import { FileManager } from '../files/file-manager';
-import { sequelize } from './config';
+import FileManager from '../files/file-manager';
+import Connection from './connection';
 
 export class DatabaseService {
   // Subject operations
@@ -41,6 +41,7 @@ export class DatabaseService {
   }
 
   static async deleteSubject(subject_id: string) {
+    const sequelize = Connection.sequelizeInstance;
     const transaction = await sequelize.transaction();
 
     try {
@@ -296,13 +297,5 @@ export class DatabaseService {
 
   static async getEmbeddingsBySubject(subject_id: string) {
     return EmbeddingsHelper.getEmbeddingsBySubject(subject_id);
-  }
-
-  static async getEmbeddingsCount(subject_id?: string) {
-    return EmbeddingsHelper.getEmbeddingsCount(subject_id);
-  }
-
-  static async getVectorDbVersion() {
-    return EmbeddingsHelper.getVersion();
   }
 }

@@ -40,7 +40,7 @@ export const useFiles = () => {
   const uploadFile = useCallback(
     async (filePath: string, subjectId: string) => {
       return window.electron.ipcRenderer.invoke(
-        FILE_SYSTEM_EVENTS.UPLOAD,
+        FILE_SYSTEM_EVENTS.UPLOAD_AND_PROCESS,
         filePath,
         subjectId,
       ) as Promise<DatabaseResponse>;

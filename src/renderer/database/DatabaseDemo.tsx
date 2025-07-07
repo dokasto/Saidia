@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDatabase } from './useDatabase';
 import { useFiles } from '../files/useFiles';
+import { useLLM } from '../llm/useLLM';
 
 interface Subject {
   subject_id: string;
@@ -20,6 +21,17 @@ interface File {
 export const DatabaseDemo: React.FC = () => {
   const db = useDatabase();
   const fileOps = useFiles();
+  const {
+    isOllamaInstalled,
+    isOllamaRunning,
+    isEmbeddingModelInstalled,
+    startOllama,
+    downloadEmbeddingModel,
+    checkOllamaInstalled,
+    checkEmbeddingModelInstalled,
+    isLoading: llmLoading,
+    error: llmError,
+  } = useLLM();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [vectorVersion, setVectorVersion] = useState<string>('');
@@ -31,14 +43,88 @@ export const DatabaseDemo: React.FC = () => {
     useState<string>('');
   const [activeTab, setActiveTab] = useState<
     'subjects' | 'files' | 'dashboard'
-  >('subjects');
+  >('files');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load initial data
+  // Load initial data and auto-start Ollama
   useEffect(() => {
     loadData();
+    autoStartOllama();
   }, []);
+
+  // Auto-start Ollama and download embedding model
+  const autoStartOllama = async () => {
+    try {
+      console.log('Starting auto-setup process...');
+
+      // Step 1: Check if Ollama is installed
+      await checkOllamaInstalled();
+
+      // Step 2: Wait a moment and then start Ollama if needed
+      setTimeout(async () => {
+        try {
+          // Try to start Ollama (it will fail gracefully if already running)
+          console.log('Attempting to start Ollama...');
+          await startOllama();
+
+          // Step 3: Wait for Ollama to start, then check embedding model
+          setTimeout(async () => {
+            try {
+              await checkEmbeddingModelInstalled();
+
+              // Step 4: Wait a moment and then download embedding model if needed
+              setTimeout(async () => {
+                try {
+                  console.log('Attempting to download embedding model...');
+                  await downloadEmbeddingModel();
+                } catch (error) {
+                  console.log(
+                    'Embedding model download failed or already installed:',
+                    error,
+                  );
+                }
+              }, 2000);
+            } catch (error) {
+              console.log('Embedding model check failed:', error);
+            }
+          }, 3000);
+        } catch (error) {
+          console.log('Ollama start failed or already running:', error);
+
+          // If Ollama start failed, still try to check embedding model
+          setTimeout(async () => {
+            try {
+              await checkEmbeddingModelInstalled();
+
+              setTimeout(async () => {
+                try {
+                  console.log('Attempting to download embedding model...');
+                  await downloadEmbeddingModel();
+                } catch (error) {
+                  console.log(
+                    'Embedding model download failed or already installed:',
+                    error,
+                  );
+                }
+              }, 2000);
+            } catch (error) {
+              console.log('Embedding model check failed:', error);
+            }
+          }, 2000);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error('Error in auto-start process:', error);
+    }
+  };
+
+  // Auto-select first subject when subjects are loaded
+  useEffect(() => {
+    if (subjects.length > 0 && !selectedSubjectForUpload) {
+      setSelectedSubjectForUpload(subjects[0].subject_id);
+    }
+  }, [subjects, selectedSubjectForUpload]);
 
   const loadData = async () => {
     setLoading(true);
@@ -59,12 +145,6 @@ export const DatabaseDemo: React.FC = () => {
         setFiles(filesResult.data || []);
       } else {
         setError(`Failed to load files: ${filesResult.error}`);
-      }
-
-      // Get vector database version
-      const versionResult = await db.getVectorDbVersion();
-      if (versionResult.success) {
-        setVectorVersion(versionResult.data || 'Unknown');
       }
     } catch (err) {
       setError(`Error loading data: ${(err as Error).message}`);
@@ -137,10 +217,7 @@ export const DatabaseDemo: React.FC = () => {
       console.log('Uploading file...');
       // Use the new file upload system that properly stores files
       const { canceled, filePaths } =
-        await window.electron.dialog.showOpenDialog({
-          title: 'Select a document',
-          properties: ['openFile'],
-        });
+        await window.electron.dialog.showOpenDialog();
 
       if (canceled) return;
 
@@ -231,6 +308,175 @@ export const DatabaseDemo: React.FC = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <h1>Database Demo</h1>
+
+      {/* Ollama Management Section */}
+      <div
+        style={{
+          marginBottom: '30px',
+          padding: '20px',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          backgroundColor: '#f8f9fa',
+        }}
+      >
+        <h3>Ollama Management</h3>
+        <div
+          style={{
+            display: 'flex',
+            gap: '10px',
+            marginBottom: '15px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backgroundColor: isOllamaInstalled ? '#28a745' : '#dc3545',
+              color: 'white',
+            }}
+          >
+            Ollama: {isOllamaInstalled ? 'Installed' : 'Not Installed'}
+          </div>
+          <div
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backgroundColor: isOllamaRunning ? '#28a745' : '#ffc107',
+              color: isOllamaRunning ? 'white' : 'black',
+            }}
+          >
+            Status: {isOllamaRunning ? 'Running' : 'Stopped'}
+          </div>
+          <div
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              backgroundColor: isEmbeddingModelInstalled
+                ? '#28a745'
+                : '#dc3545',
+              color: 'white',
+            }}
+          >
+            Embedding Model:{' '}
+            {isEmbeddingModelInstalled ? 'Installed' : 'Not Installed'}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '15px', fontSize: '14px', color: '#666' }}>
+          {!isOllamaInstalled && (
+            <p>
+              • Ollama needs to be installed first. Use the Download Demo page
+              to install Ollama.
+            </p>
+          )}
+          {isOllamaInstalled && !isOllamaRunning && (
+            <p>
+              • Ollama is installed but not running. Click "Start Ollama" to
+              start the service.
+            </p>
+          )}
+          {isOllamaRunning && !isEmbeddingModelInstalled && (
+            <p>
+              • Ollama is running! Now download the embedding model to enable
+              text processing features.
+            </p>
+          )}
+          {isOllamaRunning && isEmbeddingModelInstalled && (
+            <p>
+              • Perfect! Ollama is running and the embedding model is ready. You
+              can now use text processing features.
+            </p>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              checkOllamaInstalled();
+              checkEmbeddingModelInstalled();
+            }}
+            disabled={llmLoading}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: llmLoading ? '#ccc' : '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: llmLoading ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            {llmLoading ? 'Checking...' : 'Refresh Status'}
+          </button>
+
+          {!isOllamaRunning && (
+            <button
+              onClick={startOllama}
+              disabled={llmLoading || !isOllamaInstalled}
+              style={{
+                padding: '8px 16px',
+                backgroundColor:
+                  llmLoading || !isOllamaInstalled ? '#ccc' : '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor:
+                  llmLoading || !isOllamaInstalled ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              {llmLoading ? 'Starting...' : 'Start Ollama'}
+            </button>
+          )}
+
+          {isOllamaRunning && !isEmbeddingModelInstalled && (
+            <button
+              onClick={downloadEmbeddingModel}
+              disabled={llmLoading}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: llmLoading ? '#ccc' : '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: llmLoading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              {llmLoading ? 'Downloading...' : 'Download Embedding Model'}
+            </button>
+          )}
+
+          {isOllamaRunning && isEmbeddingModelInstalled && (
+            <div
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+              }}
+            >
+              ✓ All Ready
+            </div>
+          )}
+        </div>
+
+        {llmError && (
+          <div style={{ color: 'red', marginTop: '10px', fontSize: '14px' }}>
+            Error: {llmError}
+          </div>
+        )}
+      </div>
 
       {error && (
         <div

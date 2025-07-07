@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config';
+import Connection from '../connection';
 
 interface FileAttributes {
   file_id: string;
@@ -48,7 +48,7 @@ File.init(
     },
   },
   {
-    sequelize,
+    sequelize: Connection.sequelizeInstance,
     modelName: 'File',
     tableName: 'files',
     timestamps: false,

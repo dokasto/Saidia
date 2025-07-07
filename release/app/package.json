@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
+    "mammoth": "^1.9.1",
+    "odt2html": "^1.0.1",
     "ollama": "^0.5.16",
+    "pdftoimg-js": "^0.2.3",
     "sequelize": "^6.37.7",
     "sqlite-vec": "^0.1.7-alpha.2",
     "sqlite3": "^5.1.7"

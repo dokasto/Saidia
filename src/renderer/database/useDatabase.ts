@@ -195,19 +195,6 @@ export const useDatabase = () => {
     ) as Promise<DatabaseResponse>;
   }, []);
 
-  const getEmbeddingsCount = useCallback(async (subjectId?: string) => {
-    return window.electron.ipcRenderer.invoke(
-      EMBEDDING_EVENTS.GET_COUNT,
-      subjectId,
-    ) as Promise<DatabaseResponse>;
-  }, []);
-
-  const getVectorDbVersion = useCallback(async () => {
-    return window.electron.ipcRenderer.invoke(
-      EMBEDDING_EVENTS.GET_VECTOR_DB_VERSION,
-    ) as Promise<DatabaseResponse>;
-  }, []);
-
   // Database file operations
   const createFile = useCallback(
     async (
@@ -282,10 +269,8 @@ export const useDatabase = () => {
     searchSimilar,
     getEmbeddingsByFile,
     getEmbeddingsBySubject,
-    getEmbeddingsCount,
-    getVectorDbVersion,
 
-    // file operations
+    // File operations
     createFile,
     getFiles,
     getFile,

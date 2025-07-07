@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../config';
+import Connection from '../connection';
 
 interface QuestionTagAttributes {
   question_id: string;
@@ -36,7 +36,7 @@ QuestionTag.init(
     },
   },
   {
-    sequelize,
+    sequelize: Connection.sequelizeInstance,
     modelName: 'QuestionTag',
     tableName: 'question_tags',
     timestamps: false,

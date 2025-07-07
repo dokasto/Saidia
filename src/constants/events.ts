@@ -42,13 +42,11 @@ export const EMBEDDING_EVENTS = {
   SEARCH_SIMILAR: 'db:searchSimilar',
   GET_BY_FILE: 'db:getEmbeddingsByFile',
   GET_BY_SUBJECT: 'db:getEmbeddingsBySubject',
-  GET_COUNT: 'db:getEmbeddingsCount',
-  GET_VECTOR_DB_VERSION: 'db:getVectorDbVersion',
 } as const;
 
 // File System Events
 export const FILE_SYSTEM_EVENTS = {
-  UPLOAD: 'file:upload',
+  UPLOAD_AND_PROCESS: 'file:uploadAndProcess',
   GET_STORAGE_PATH: 'file:getStoragePath',
   GET_ABSOLUTE_PATH: 'file:getAbsolutePath',
   EXISTS: 'file:exists',
@@ -70,25 +68,9 @@ export const DIALOG_EVENTS = {
   SHOW_OPEN_DIALOG: 'dialog:showOpenDialog',
 } as const;
 
-// LLM Events
 export const LLM_EVENTS = {
-  DOWNLOAD_OLLAMA: 'llm:downloadOllama',
-  CHECK_OLLAMA_INSTALLED: 'llm:checkOllamaInstalled',
-  START_OLLAMA: 'llm:startOllama',
-  DOWNLOAD_MODEL: 'llm:downloadModel',
-  CHECK_MODEL_INSTALLED: 'llm:checkModelInstalled',
-  GET_AVAILABLE_MODELS: 'llm:getAvailableModels',
-  GET_MODEL_NAME: 'llm:getModelName',
-  GET_EMBEDDING_MODEL_NAME: 'llm:getEmbeddingModelName',
-  START_CHAT: 'llm:startChat',
-  SEND_MESSAGE: 'llm:sendMessage',
-  STOP_CHAT: 'llm:stopChat',
-  GET_CHAT_HISTORY: 'llm:getChatHistory',
-  CLEAR_CHAT_HISTORY: 'llm:clearChatHistory',
+  INIT: 'llm:init',
   PROGRESS: 'llm:progress',
-  STREAM_RESPONSE: 'llm:streamResponse',
-  DOWNLOAD_EMBEDDING_MODEL: 'llm:downloadEmbeddingModel',
-  CHECK_EMBEDDING_MODEL_INSTALLED: 'llm:checkEmbeddingModelInstalled',
   CREATE_EMBEDDING: 'llm:createEmbedding',
   GENERATE: 'llm:generate',
 } as const;

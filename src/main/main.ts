@@ -14,10 +14,9 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { initDatabase } from './database';
-import { setupIpcHandlers } from './ipc-handlers';
-import { FileManager } from './files/file-manager';
-import { LLMService } from './llm/LLM-Service';
+import setupIpcHandlers from './setup-ipc-handlers';
+import { APP_NAME } from '../constants/misc';
+import FileManager from './files/file-manager';
 
 class AppUpdater {
   constructor() {
@@ -43,8 +42,7 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-// Set the application name
-app.setName('Saidia');
+app.setName(APP_NAME);
 
 if (isDebug) {
   require('electron-debug').default();
@@ -78,9 +76,9 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    height: 728,
-    title: 'Saidia',
+    width: 1400,
+    height: 1200,
+    title: APP_NAME,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
@@ -139,18 +137,9 @@ app
     try {
       console.log('Starting system initialization...');
 
-      await initDatabase();
-      console.log('Database initialized successfully');
+      await Promise.all([FileManager.init()]);
 
-      await FileManager.initialize();
-      console.log('File manager initialized successfully');
-
-      await LLMService.initialize();
-      console.log('LLM service initialized successfully');
-
-      // Setup IPC handlers only after successful initialization
       setupIpcHandlers();
-      console.log('IPC handlers set up successfully');
 
       createWindow();
       app.on('activate', () => {
@@ -162,14 +151,12 @@ app
       console.error('CRITICAL: Failed to initialize systems:', error);
       console.error('Error details:', error);
 
-      // Show error dialog to user
       const { dialog } = require('electron');
       dialog.showErrorBox(
         'Initialization Error',
         `Failed to initialize application systems: ${(error as Error).message}\n\nPlease try restarting the application.`,
       );
 
-      // Exit the application if initialization fails
       app.quit();
     }
   })
