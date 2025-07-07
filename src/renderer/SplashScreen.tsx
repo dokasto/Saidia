@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as stylex from '@stylexjs/stylex';
 import { Loader, Text, Progress } from '@mantine/core';
 import { LLMServiceProgress } from '../main/llm/services';
+import { useNavigate } from 'react-router-dom';
 
 export default function SplashScreen() {
+  const navigate = useNavigate();
   const [progress, setProgress] = useState<LLMServiceProgress | null>(null);
 
   const handleProgress = useCallback(
@@ -17,6 +19,12 @@ export default function SplashScreen() {
     window.electron.llm.onProgress(handleProgress);
     window.electron.llm.init();
   }, [handleProgress]);
+
+  useEffect(() => {
+    if (progress?.completed === true) {
+      navigate('/dashboard');
+    }
+  }, [progress?.completed, navigate]);
 
   return (
     <div {...stylex.props(styles.container)}>
