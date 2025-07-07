@@ -52,6 +52,9 @@ export const FILE_SYSTEM_EVENTS = {
   EXISTS: 'file:exists',
   GET_INFO: 'file:getInfo',
   CHECK_INITIALIZATION: 'file:checkInitialization',
+  GET_SUBJECT_FILE_PATH: 'file:getSubjectFilePath',
+  LIST_SUBJECT_FILES: 'file:listSubjectFiles',
+  DELETE_SUBJECT_FILE: 'file:deleteSubjectFile',
 } as const;
 
 // Download Events

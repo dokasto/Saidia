@@ -13,9 +13,13 @@ import parseOdt from './parse-odt';
 import parsePdf from './parse-pdf';
 import parseTxt from './parse-text';
 import LLMService from '../llm/services';
+import DatabaseService from '../database/services';
+import { ensureDirectory, uniqueID } from '../util';
+import { EmbeddingsHelper } from '../database/embeddings-helper';
+import parseImage from './parse-image';
+import { FILE_EXTENSIONS, IMAGE_EXTENSIONS } from '../../constants/misc';
 
 const copyFile = promisify(fs.copyFile);
-const mkdir = promisify(fs.mkdir);
 const unlink = promisify(fs.unlink);
 const stat = promisify(fs.stat);
 const readFile = promisify(fs.readFile);
@@ -23,47 +27,71 @@ const readFile = promisify(fs.readFile);
 const DOWNLOAD_TIMEOUT = 43200000; // 12 hours in milliseconds
 
 export default class FileManager {
-  private static baseStoragePath: string;
+  static async uploadAndProcessFile(filePath: string, subjectId: string) {
+    const originalFilename = path.basename(filePath);
+    const doc = await FileManager.loadFile(filePath);
 
-  /**
-   * Initialize the file manager and create necessary directories
-   */
-  static async init(): Promise<void> {
+    if (doc.length < 1) {
+      console.warn('File is empty, skipping...');
+      return { success: false, error: 'File is empty' };
+    }
+
+    const storedFile = await FileManager.storeFile(
+      filePath,
+      subjectId,
+      originalFilename,
+    );
+
+    if (storedFile == null) {
+      return {
+        success: false,
+        error: 'Failed to store file',
+      };
+    }
+
+    const fileId = storedFile.filename;
+
     try {
-      console.log('=== FileManager Initialization Starting ===');
+      const createFileResult = await DatabaseService.createFile(
+        fileId,
+        subjectId,
+        originalFilename,
+        storedFile.storedPath,
+      );
 
-      // Get the user data directory (persists across app restarts)
-      const userDataPath = app.getPath('userData');
-      this.baseStoragePath = path.join(userDataPath, 'files');
-
-      console.log('User data path:', userDataPath);
-      console.log('Base storage path:', this.baseStoragePath);
-
-      // Create the base storage directory if it doesn't exist
-      await mkdir(this.baseStoragePath, { recursive: true });
-      console.log('Storage directory created successfully');
-
-      // Verify the directory was created
-      console.log('Verifying storage directory...');
-      const stats = await stat(this.baseStoragePath);
-      if (!stats.isDirectory()) {
-        throw new Error('Failed to create storage directory - not a directory');
+      if (createFileResult == null) {
+        console.warn('Failed to create file record in database');
+        return {
+          success: false,
+          error: 'Failed to create file record in database',
+        };
       }
 
-      console.log('Storage directory verification passed');
-      console.log('Directory stats:', {
-        isDirectory: stats.isDirectory(),
-        size: stats.size,
-        created: stats.birthtime,
-        modified: stats.mtime,
-      });
+      const embeddings: number[][] = await FileManager.embed(doc);
 
-      console.log('=== FileManager Initialization Complete ===');
+      for (let i = 0; i < embeddings.length; i++) {
+        if (doc[i]?.content != null && doc[i].content.length > 0) {
+          EmbeddingsHelper.insertEmbedding(
+            uniqueID(),
+            subjectId,
+            fileId,
+            doc[i].content[0],
+            embeddings[i],
+          );
+        }
+      }
+
+      return {
+        success: true,
+        data: { size: fs.statSync(storedFile.storedPath).size },
+      };
     } catch (error) {
-      console.error('=== FileManager Initialization Failed ===');
-      console.error('Error details:', error);
-      this.baseStoragePath = ''; // Reset on failure
-      throw error;
+      console.error('Failed to create file record in database:', error);
+      await FileManager.deleteFile(storedFile.storedPath);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 
@@ -81,7 +109,9 @@ export default class FileManager {
       case '.pdf':
         return await parsePdf(filePath);
       default:
-        // just try to parse it as a text file
+        if (IMAGE_EXTENSIONS.map((ext) => `.${ext}`).includes(fileExtension)) {
+          return await parseImage(filePath);
+        }
         const rawText = await readFile(filePath, 'utf-8');
         return parseTxt(rawText);
     }
@@ -98,170 +128,129 @@ export default class FileManager {
     }
   }
 
-  /**
-   * Store a file in the app's storage directory
-   * @param sourceFilePath - Original file path (from file upload)
-   * @param subjectId - Subject ID to organize files
-   * @param originalFilename - Original filename
-   * @returns Object with stored file info
-   */
   static async storeFile(
     sourceFilePath: string,
     subjectId: string,
     originalFilename: string,
-  ): Promise<{
-    storedPath: string;
-    relativePath: string;
-    filename: string;
-    size: number;
-  }> {
-    if (!this.baseStoragePath) {
-      throw new Error('FileManager not initialized');
-    }
-
-    // Create subject-specific directory
-    const subjectDir = path.join(this.baseStoragePath, subjectId);
-    await mkdir(subjectDir, { recursive: true });
-
-    // Generate unique filename to avoid conflicts
+  ): Promise<{ storedPath: string; filename: string } | null> {
+    const subjectDir = await this.getSubjectDirectory(subjectId);
     const fileExtension = path.extname(originalFilename);
     const baseName = path.basename(originalFilename, fileExtension);
-    const timestamp = Date.now();
-    const uniqueFilename = `${baseName}_${timestamp}${fileExtension}`;
-
-    // Full path where the file will be stored
+    const uniqueFilename = `${baseName}_${uniqueID()}${fileExtension}`;
     const storedPath = path.join(subjectDir, uniqueFilename);
 
-    // Relative path for database storage
-    const relativePath = path.join(subjectId, uniqueFilename);
+    // if (!fs.existsSync(storedPath))
+    //   fs.mkdirSync(storedPath, { recursive: true });
 
     try {
-      // Copy the file to our storage directory
       await copyFile(sourceFilePath, storedPath);
-
-      // Get file stats
-      const stats = await stat(storedPath);
-
-      return {
-        storedPath,
-        relativePath,
-        filename: originalFilename,
-        size: stats.size,
-      };
+      console.info(`File stored at: ${storedPath}`);
+      return { storedPath, filename: uniqueFilename };
     } catch (error) {
       console.error('Failed to store file:', error);
-      throw error;
+      return null;
     }
   }
 
-  /**
-   * Delete a stored file
-   * @param relativePath - Relative path of the file to delete
-   */
+  static async getSubjectDirectory(subjectId: string): Promise<string> {
+    const dir = path.join(app.getPath('userData'), 'files', subjectId);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+
   static async deleteFile(relativePath: string): Promise<void> {
-    if (!this.baseStoragePath) {
-      throw new Error('FileManager not initialized');
-    }
-
-    const fullPath = path.join(this.baseStoragePath, relativePath);
-
     try {
-      await unlink(fullPath);
-      console.log('File deleted:', fullPath);
+      await unlink(relativePath);
+      console.log('File deleted:', relativePath);
     } catch (error) {
       console.error('Failed to delete file:', error);
       throw error;
     }
   }
 
-  /**
-   * Get the absolute path of a stored file
-   * @param relativePath - Relative path stored in database
-   * @returns Absolute path to the file
-   */
-  static getAbsolutePath(relativePath: string): string {
-    if (!this.baseStoragePath) {
-      throw new Error('FileManager not initialized');
-    }
-
-    return path.join(this.baseStoragePath, relativePath);
+  static async getStoragePath(): Promise<string> {
+    return app.getPath('userData');
   }
 
-  /**
-   * Check if a file exists
-   * @param relativePath - Relative path to check
-   * @returns True if file exists
-   */
+  static async getAbsolutePath(relativePath: string): Promise<string> {
+    return path.resolve(relativePath);
+  }
+
   static async fileExists(relativePath: string): Promise<boolean> {
-    if (!this.baseStoragePath) {
-      return false;
-    }
-
-    const fullPath = path.join(this.baseStoragePath, relativePath);
-
     try {
-      await stat(fullPath);
+      await stat(relativePath);
       return true;
-    } catch {
+    } catch (error) {
       return false;
     }
   }
 
-  /**
-   * Get file info
-   * @param relativePath - Relative path of the file
-   * @returns File stats and info
-   */
   static async getFileInfo(relativePath: string): Promise<{
-    size: number;
-    createdAt: Date;
-    modifiedAt: Date;
     exists: boolean;
+    size?: number;
+    modified?: Date;
+    isDirectory?: boolean;
   }> {
-    if (!this.baseStoragePath) {
-      throw new Error('FileManager not initialized');
-    }
-
-    const fullPath = path.join(this.baseStoragePath, relativePath);
-
     try {
-      const stats = await stat(fullPath);
+      const stats = await stat(relativePath);
       return {
-        size: stats.size,
-        createdAt: stats.birthtime,
-        modifiedAt: stats.mtime,
         exists: true,
+        size: stats.size,
+        modified: stats.mtime,
+        isDirectory: stats.isDirectory(),
       };
-    } catch {
+    } catch (error) {
       return {
-        size: 0,
-        createdAt: new Date(),
-        modifiedAt: new Date(),
         exists: false,
       };
     }
   }
 
-  /**
-   * Get the base storage path
-   */
-  static getStoragePath(): string {
-    return this.baseStoragePath;
-  }
+  static async checkFileManagerInitialization(): Promise<boolean> {
+    try {
+      // Check if the user data directory exists and is writable
+      const userDataPath = app.getPath('userData');
+      await stat(userDataPath);
 
-  /**
-   * Get the downloads directory path
-   */
-  static getDownloadsPath(): string {
-    if (!this.baseStoragePath) {
-      throw new Error('FileManager not initialized');
+      // Try to create a test file to verify write permissions
+      const testPath = path.join(userDataPath, '.test_write_permission');
+      await fs.promises.writeFile(testPath, 'test');
+      await unlink(testPath);
+
+      return true;
+    } catch (error) {
+      console.error('File manager initialization check failed:', error);
+      return false;
     }
-    return path.join(this.baseStoragePath, 'appDownloads');
   }
 
-  /**
-   * Perform the actual download with progress monitoring
-   */
+  static async getSubjectFilePath(
+    subjectId: string,
+    filename: string,
+  ): Promise<string> {
+    const subjectDir = await this.getSubjectDirectory(subjectId);
+    return path.join(subjectDir, filename);
+  }
+
+  static async listSubjectFiles(subjectId: string): Promise<string[]> {
+    const subjectDir = await this.getSubjectDirectory(subjectId);
+    try {
+      const files = await fs.promises.readdir(subjectDir);
+      return files.filter((file) => !file.startsWith('.')); // Exclude hidden files
+    } catch (error) {
+      console.error('Failed to list subject files:', error);
+      return [];
+    }
+  }
+
+  static async deleteSubjectFile(
+    subjectId: string,
+    filename: string,
+  ): Promise<void> {
+    const filePath = await this.getSubjectFilePath(subjectId, filename);
+    await this.deleteFile(filePath);
+  }
+
   private static async performDownload(
     url: string,
     filePath: string,
@@ -406,82 +395,9 @@ export default class FileManager {
     });
   }
 
-  /**
-   * Get list of downloaded files (including files in subfolders)
-   */
-  static async getDownloadedFiles(): Promise<
-    Array<{
-      filename: string;
-      filePath: string;
-      size: number;
-      createdAt: Date;
-      folderName?: string;
-    }>
-  > {
-    if (!this.baseStoragePath) {
-      return [];
-    }
-
-    try {
-      const downloadsPath = this.getDownloadsPath();
-      const allFiles: Array<{
-        filename: string;
-        filePath: string;
-        size: number;
-        createdAt: Date;
-        folderName?: string;
-      }> = [];
-
-      // Recursive function to scan directories
-      const scanDirectory = async (
-        dirPath: string,
-        relativePath: string = '',
-      ) => {
-        const items = await fs.promises.readdir(dirPath);
-
-        for (const item of items) {
-          const itemPath = path.join(dirPath, item);
-          const stats = await stat(itemPath);
-
-          if (stats.isDirectory()) {
-            // Recursively scan subdirectory
-            const subFolderPath = relativePath
-              ? path.join(relativePath, item)
-              : item;
-            await scanDirectory(itemPath, subFolderPath);
-          } else {
-            // It's a file
-            allFiles.push({
-              filename: item,
-              filePath: itemPath,
-              size: stats.size,
-              createdAt: stats.birthtime,
-              folderName: relativePath || undefined,
-            });
-          }
-        }
-      };
-
-      await scanDirectory(downloadsPath);
-
-      return allFiles.sort(
-        (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-      );
-    } catch (error) {
-      console.error('Failed to get downloaded files:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Download files from URLs with progress monitoring
-   * @param urls - Array of URLs to download (must contain at least one URL)
-   * @param onProgress - Progress callback function for individual downloads
-   * @param folderName - Optional folder name to organize downloads (creates subdirectory)
-   * @returns Array of download results
-   */
   static async downloadFiles(
     urls: string[],
+    downloadsPath: string,
     onProgress?: (progress: {
       downloadId: string;
       url: string;
@@ -491,7 +407,6 @@ export default class FileManager {
       filename?: string;
       status: 'starting' | 'downloading' | 'completed' | 'error';
     }) => void,
-    folderName?: string,
   ): Promise<
     Array<{
       url: string;
@@ -503,42 +418,13 @@ export default class FileManager {
       error?: string;
     }>
   > {
-    console.log(`=== Starting download of ${urls.length} files ===`);
-    console.log('URLs:', urls);
-
-    if (!this.baseStoragePath) {
-      throw new Error('FileManager not initialized');
-    }
-
-    if (!urls || urls.length === 0) {
-      throw new Error('At least one URL must be provided');
-    }
-
-    const downloadsPath = folderName ?? this.getDownloadsPath();
-
-    try {
-      await mkdir(downloadsPath, { recursive: true });
-      console.log(`Downloads directory created successfully: ${downloadsPath}`);
-    } catch (error) {
-      console.error(
-        `Failed to create downloads directory: ${downloadsPath}`,
-        error,
-      );
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to create downloads directory: ${errorMessage}`);
-    }
-
-    // Generate download IDs for each URL
     const downloadTasks = urls.map((url, index) => ({
       url,
       downloadId: `download_${Date.now()}_${index}`,
     }));
 
-    // Download all files concurrently
     const downloadPromises = downloadTasks.map(async ({ url, downloadId }) => {
       try {
-        // Notify progress that download is starting
         onProgress?.({
           downloadId,
           url,
@@ -548,7 +434,6 @@ export default class FileManager {
           status: 'starting',
         });
 
-        // Parse URL and extract filename
         let urlObj;
         try {
           urlObj = new URL(url);
@@ -560,19 +445,16 @@ export default class FileManager {
         const urlPath = urlObj.pathname;
         let filename = path.basename(urlPath);
 
-        // If no filename in URL, generate one
         if (!filename || filename === '/' || filename === '') {
           const timestamp = Date.now();
           const extension = urlPath.includes('.') ? path.extname(urlPath) : '';
           filename = `download_${timestamp}${extension}`;
         }
 
-        // Remove query parameters from filename if present
         filename = filename.split('?')[0];
 
         console.log(`Extracted filename: "${filename}" from URL: ${url}`);
 
-        // Generate unique filename to avoid conflicts
         const fileExtension = path.extname(filename);
         const baseName = path.basename(filename, fileExtension);
         const timestamp = Date.now();
@@ -580,7 +462,6 @@ export default class FileManager {
 
         const filePath = path.join(downloadsPath, uniqueFilename);
 
-        // Download the file
         const result = await this.performDownload(url, filePath, (progress) => {
           onProgress?.({
             downloadId,
@@ -594,10 +475,8 @@ export default class FileManager {
         });
 
         if (result.success) {
-          // Get file stats
           const stats = await stat(filePath);
 
-          // Notify completion
           onProgress?.({
             downloadId,
             url,
@@ -617,7 +496,6 @@ export default class FileManager {
             success: true,
           };
         } else {
-          // Notify error
           onProgress?.({
             downloadId,
             url,
@@ -641,7 +519,6 @@ export default class FileManager {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
 
-        // Notify error
         onProgress?.({
           downloadId,
           url,
@@ -666,38 +543,10 @@ export default class FileManager {
     return Promise.all(downloadPromises);
   }
 
-  /**
-   * Delete a downloaded file
-   */
-  static async deleteDownloadedFile(filename: string): Promise<boolean> {
-    if (!this.baseStoragePath) {
-      return false;
-    }
-
-    try {
-      const downloadsPath = this.getDownloadsPath();
-      const filePath = path.join(downloadsPath, filename);
-      await unlink(filePath);
-      return true;
-    } catch (error) {
-      console.error('Failed to delete downloaded file:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Clean up files for a deleted subject
-   * @param subjectId - Subject ID to clean up
-   */
   static async cleanupSubjectFiles(subjectId: string): Promise<void> {
-    if (!this.baseStoragePath) {
-      return;
-    }
-
-    const subjectDir = path.join(this.baseStoragePath, subjectId);
+    const subjectDir = await this.getSubjectDirectory(subjectId);
 
     try {
-      // Remove the entire subject directory
       await fs.promises.rmdir(subjectDir, { recursive: true });
       console.log('Subject directory cleaned up:', subjectDir);
     } catch (error) {

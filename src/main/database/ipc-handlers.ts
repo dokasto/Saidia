@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { DatabaseService } from './services';
+import DatabaseService from './services';
 import {
   SUBJECT_EVENTS,
   FILE_EVENTS,
