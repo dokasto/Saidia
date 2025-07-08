@@ -22,7 +22,43 @@ class Connection {
     this.ensureDBDirectory(dbPath);
 
     this.vectorDbInstance = new Database(dbPath);
-    sqliteVec.load(this.vectorDbInstance);
+
+    try {
+      sqliteVec.load(this.vectorDbInstance);
+    } catch (error) {
+      console.error('Failed to load extension using sqliteVec.load', error);
+
+      let extensionPath = '';
+
+      // Resolve the correct path for the SQLite extension
+      extensionPath = path.join(
+        app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
+        'node_modules/sqlite-vec/node_modules/sqlite-vec-darwin-arm64/vec0.dylib',
+      );
+      console.log('Extension path:', extensionPath);
+      console.log('Extension exists:', fs.existsSync(extensionPath));
+
+      // Load the SQLite extension using the correct path
+      try {
+        this.vectorDbInstance.loadExtension(extensionPath);
+      } catch (error) {
+        console.error('Failed to load extension 3rd try ', error);
+        extensionPath = path.join(
+          app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
+          'node_modules/sqlite-vec/node_modules/sqlite-vec-darwin-arm64/vec0',
+        );
+        console.log('Extension path:', extensionPath);
+        console.log('Extension exists:', fs.existsSync(extensionPath));
+
+        // Load the SQLite extension using the correct path
+        try {
+          this.vectorDbInstance.loadExtension(extensionPath);
+        } catch (error) {
+          console.error('Failed to load SQLite extension 3rd try ', error);
+          throw error;
+        }
+      }
+    }
 
     this.vectorDbInstance.pragma('foreign_keys = ON');
 
