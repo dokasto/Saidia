@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "electron": "^37.2.0",
-    "electron-rebuild": "^3.2.9"
+    "electron-rebuild": "^3.2.9",
+    "rimraf": "^6.0.1"
   }
 }
