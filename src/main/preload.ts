@@ -84,8 +84,12 @@ const electronHandler = {
       return ipcRenderer.invoke(LLM_EVENTS.INIT);
     },
 
-    createEmbedding: (input: string | string[]) => {
-      return ipcRenderer.invoke(LLM_EVENTS.CREATE_EMBEDDING, input);
+    generateQuestions: (subjectId: string, options: any) => {
+      return ipcRenderer.invoke(
+        LLM_EVENTS.GENERATE_QUESTIONS,
+        subjectId,
+        options,
+      );
     },
 
     generate: (prompt: string) => {

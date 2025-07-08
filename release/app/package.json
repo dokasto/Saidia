@@ -10,13 +10,17 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
+    "heic-convert": "^2.1.0",
     "mammoth": "^1.9.1",
     "odt2html": "^1.0.1",
     "ollama": "^0.5.16",
     "pdftoimg-js": "^0.2.3",
     "sequelize": "^6.37.7",
     "sqlite-vec": "^0.1.7-alpha.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "electron": "^37.2.0",

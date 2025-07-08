@@ -1,6 +1,8 @@
 import { ipcMain } from 'electron';
 import LLMService from './services';
 import { LLM_EVENTS } from '../../constants/events';
+import { GenerateQuestionOptions } from '../../constants/types';
+import { generateQuestions } from './question-generation';
 
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -22,14 +24,9 @@ export default function setupLLMIPCHandlers() {
   });
 
   ipcMain.handle(
-    LLM_EVENTS.CREATE_EMBEDDING,
-    async (event, input: string | string[]) => {
-      try {
-        const result = await LLMService.createEmbedding(input);
-        return { success: true, data: result };
-      } catch (error) {
-        return { success: false, error: handleError(error) };
-      }
+    LLM_EVENTS.GENERATE_QUESTIONS,
+    async (event, subjectId: string, options: GenerateQuestionOptions) => {
+      return await generateQuestions(subjectId, options);
     },
   );
 
