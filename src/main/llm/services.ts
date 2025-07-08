@@ -575,12 +575,8 @@ export default class LLMServices {
     }
   }
 
-  /**
-   * Create embeddings using Ollama's embed method
-   */
-  static async createEmbedding(input: string | string[]): Promise<{
+  static async createEmbedding(input: string): Promise<{
     success: boolean;
-    embedding?: number[];
     embeddings?: number[][];
     error?: string;
   }> {
@@ -609,11 +605,7 @@ export default class LLMServices {
         input: input,
       });
 
-      if (Array.isArray(input)) {
-        return { success: true, embeddings: response.embeddings };
-      } else {
-        return { success: true, embedding: response.embeddings[0] };
-      }
+      return { success: true, embeddings: response.embeddings };
     } catch (error) {
       return { success: false, error: String(error) };
     }

@@ -269,7 +269,6 @@ export default class DatabaseService {
     chunk_id: string,
     subject_id: string,
     file_id: string,
-    chunk_index: number,
     text: string,
     embedding: number[],
   ) {
@@ -277,7 +276,6 @@ export default class DatabaseService {
       chunk_id,
       subject_id,
       file_id,
-      chunk_index,
       text,
       embedding,
     );

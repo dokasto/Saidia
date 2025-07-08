@@ -74,7 +74,7 @@ export const DIALOG_EVENTS = {
 export const LLM_EVENTS = {
   INIT: 'llm:init',
   PROGRESS: 'llm:progress',
-  CREATE_EMBEDDING: 'llm:createEmbedding',
+  GENERATE_QUESTIONS: 'llm:generateQuestions',
   GENERATE: 'llm:generate',
 } as const;
 

@@ -2,6 +2,7 @@ import { URL } from 'url';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { BrowserWindow } from 'electron';
 
 export function resolveHtmlPath(htmlFileName: string) {
   if (process.env.NODE_ENV === 'development') {
@@ -55,3 +56,15 @@ export async function copyDirectory(
 export function uniqueID(): string {
   return crypto.randomUUID();
 }
+
+// Simple function to log to renderer console
+export const renderLog = (...args: any[]) => {
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach((window) => {
+    if (!window.isDestroyed()) {
+      window.webContents.executeJavaScript(`
+        console.log('[Main Process]', ...${JSON.stringify(args)});
+      `);
+    }
+  });
+};

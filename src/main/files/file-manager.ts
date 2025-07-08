@@ -14,10 +14,12 @@ import parsePdf from './parse-pdf';
 import parseTxt from './parse-text';
 import LLMService from '../llm/services';
 import DatabaseService from '../database/services';
-import { ensureDirectory, uniqueID } from '../util';
+import { renderLog, uniqueID } from '../util';
 import { EmbeddingsHelper } from '../database/embeddings-helper';
 import parseImage from './parse-image';
-import { FILE_EXTENSIONS, IMAGE_EXTENSIONS } from '../../constants/misc';
+import { IMAGE_EXTENSIONS } from '../../constants/misc';
+import { generateEmbeddingPrompt } from '../llm/prompts';
+const convert = require('heic-convert');
 
 const copyFile = promisify(fs.copyFile);
 const unlink = promisify(fs.unlink);
@@ -67,7 +69,21 @@ export default class FileManager {
         };
       }
 
-      const embeddings: number[][] = await FileManager.embed(doc);
+      const subject = await DatabaseService.getSubject(subjectId);
+      if (subject == null) {
+        console.warn('Subject not found');
+        return {
+          success: false,
+          error: 'Subject not found',
+        };
+      }
+
+      renderLog('Embedding file:', doc);
+
+      const embeddings: number[][] = await FileManager.embed(doc, subject.name);
+      let embeddingsInserted = 0;
+
+      renderLog('Embeddings:', embeddings);
 
       for (let i = 0; i < embeddings.length; i++) {
         if (doc[i]?.content != null && doc[i].content.length > 0) {
@@ -75,11 +91,16 @@ export default class FileManager {
             uniqueID(),
             subjectId,
             fileId,
-            doc[i].content[0],
+            doc[i].content.join('\n\n'),
             embeddings[i],
           );
+          embeddingsInserted++;
         }
       }
+
+      renderLog(
+        `Inserted ${embeddingsInserted} embeddings for file: ${fileId}`,
+      );
 
       return {
         success: true,
@@ -110,22 +131,30 @@ export default class FileManager {
         return await parsePdf(filePath);
       default:
         if (IMAGE_EXTENSIONS.map((ext) => `.${ext}`).includes(fileExtension)) {
-          return await parseImage(filePath);
+          const base64 = await this.convertAnyImageToBase64(filePath);
+          return base64 != null ? await parseImage(base64) : [];
         }
         const rawText = await readFile(filePath, 'utf-8');
         return parseTxt(rawText);
     }
   }
 
-  static async embed(doc: Section[]): Promise<number[][]> {
-    const lines: string[] = doc.flatMap((section) => section.content);
-    const result = await LLMService.createEmbedding(lines);
-    if (result.success && result.embeddings) {
-      return result.embeddings;
-    } else {
-      console.error('Failed to create embedding:', result.error);
-      return [];
+  static async embed(doc: Section[], subjectName: string): Promise<number[][]> {
+    const embeddings: number[][] = [];
+
+    for (const section of doc) {
+      const prompt = generateEmbeddingPrompt(
+        section.content.join('\n\n'),
+        subjectName,
+      );
+      const result = await LLMService.createEmbedding(prompt);
+      if (result.success && result.embeddings) {
+        embeddings.push(...result.embeddings);
+      } else {
+        console.error('Failed to create embedding:', result.error);
+      }
     }
+    return embeddings;
   }
 
   static async storeFile(
@@ -138,9 +167,6 @@ export default class FileManager {
     const baseName = path.basename(originalFilename, fileExtension);
     const uniqueFilename = `${baseName}_${uniqueID()}${fileExtension}`;
     const storedPath = path.join(subjectDir, uniqueFilename);
-
-    // if (!fs.existsSync(storedPath))
-    //   fs.mkdirSync(storedPath, { recursive: true });
 
     try {
       await copyFile(sourceFilePath, storedPath);
@@ -551,6 +577,55 @@ export default class FileManager {
       console.log('Subject directory cleaned up:', subjectDir);
     } catch (error) {
       console.error('Failed to cleanup subject files:', error);
+    }
+  }
+
+  static async convertAnyImageToBase64(
+    imagePath: string,
+  ): Promise<string | null> {
+    const fileExtension = path.extname(imagePath).toLowerCase();
+
+    const isHeifFormat = [
+      '.heif',
+      '.heic',
+      '.heif-sequence',
+      '.heic-sequence',
+    ].includes(fileExtension);
+
+    if (isHeifFormat) {
+      console.log(
+        `HEIF/HEIC format detected: ${imagePath}. Using heic-convert.`,
+      );
+      try {
+        const inputBuffer = await readFile(imagePath);
+        const outputBuffer = await convert({
+          buffer: inputBuffer,
+          format: 'JPEG',
+          quality: 0.85,
+        });
+        return outputBuffer.toString('base64');
+      } catch (error) {
+        console.error(
+          'Failed to convert HEIF/HEIC file with heic-convert:',
+          error,
+        );
+        // Fallback to direct file reading
+        try {
+          const data = await readFile(imagePath);
+          return data.toString('base64');
+        } catch (fallbackError) {
+          console.error('Fallback method also failed:', fallbackError);
+          return null;
+        }
+      }
+    }
+
+    try {
+      const data = await readFile(imagePath);
+      return data.toString('base64');
+    } catch (error) {
+      console.error('Failed to read image file:', error);
+      return null;
     }
   }
 }

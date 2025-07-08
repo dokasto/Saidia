@@ -29,10 +29,13 @@ export class EmbeddingsHelper {
 
   /**
    * Search for similar embeddings using KNN
+   * @param queryEmbedding - The embedding to search for
+   * @param limit - Number of results to return. Use -1 or null for all results
+   * @param subject_id - Optional subject filter
    */
   static searchSimilar(
     queryEmbedding: number[],
-    limit: number = 10,
+    limit: number | null = 10,
     subject_id?: string,
   ): any[] {
     const embeddingFloat32 = new Float32Array(queryEmbedding);
@@ -55,8 +58,13 @@ export class EmbeddingsHelper {
       params.push(subject_id);
     }
 
-    query += ` ORDER BY distance LIMIT ?`;
-    params.push(limit);
+    query += ` ORDER BY distance`;
+
+    // Only add LIMIT if a positive limit is specified
+    if (limit && limit > 0) {
+      query += ` LIMIT ?`;
+      params.push(limit);
+    }
 
     const stmt = Connection.vectorDbInstance.prepare(query);
     return stmt.all(...params);
@@ -100,5 +108,12 @@ export class EmbeddingsHelper {
       DELETE FROM embeddings WHERE subject_id = ?
     `);
     stmt.run(subject_id);
+  }
+
+  static retrieveRelevantChunksForSubject(subject_id: string): any[] {
+    const stmt = Connection.vectorDbInstance.prepare(`
+      SELECT * FROM embeddings WHERE subject_id = ?
+    `);
+    return stmt.all(subject_id);
   }
 }
