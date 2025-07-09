@@ -50,13 +50,11 @@ export const MODELS = {
   GEMMA_3N_E4B_IT_FP16: 'gemma3n:e4b-it-fp16',
   NOMIC_EMBED_TEXT_V1_5: 'nomic-embed-text:v1.5',
   GEMMA_3_12B_IT_QAT: 'gemma3:12b-it-qat',
+  GEMMA3_4B: 'gemma3:4b',
 } as const;
 
-export const GEMMA3N_OPTIONS = {
-  temperature: 0.7,
-  top_p: 0.9,
-  top_k: 50,
-  max_tokens: 32768,
-  do_sample: true,
-  repetition_penalty: 1.1,
+export const CONFIG_MODELS = {
+  EMBEDDING_MODEL: MODELS.NOMIC_EMBED_TEXT_V1_5,
+  QUESTION_GENERATION_MODEL: MODELS.GEMMA3_4B, // Todo: change to GEMMA_3N_E4B_IT_FP16 for production
+  VISION_MODEL: MODELS.GEMMA3_4B, // Todo: change to GEMMA_3_12B_IT_QAT for production
 } as const;

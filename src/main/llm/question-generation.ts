@@ -1,4 +1,4 @@
-import { MODELS } from '../../constants/misc';
+import { CONFIG_MODELS } from '../../constants/misc';
 import { GenerateQuestionOptions } from '../../constants/types';
 import { EmbeddingsHelper } from '../database/embeddings-helper';
 import DatabaseService from '../database/services';
@@ -80,7 +80,7 @@ async function generateQuestionsFromChunks(
 
     // Use Ollama structured output with proper format parameter
     let response = await LLMService.generate({
-      model: MODELS.GEMMA_3_12B_IT_QAT,
+      model: CONFIG_MODELS.QUESTION_GENERATION_MODEL,
       prompt: prompt,
       stream: false,
       format: zodToJsonSchema(zodSchema),
@@ -91,7 +91,7 @@ async function generateQuestionsFromChunks(
       renderLog('Structured output failed, trying regular output...');
 
       response = await LLMService.generate({
-        model: MODELS.GEMMA_3N_E4B_IT_FP16,
+        model: CONFIG_MODELS.QUESTION_GENERATION_MODEL,
         prompt: prompt,
         stream: false,
       });

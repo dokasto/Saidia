@@ -11,6 +11,7 @@ import {
   OLLAMA_DOWNLOAD_URLS,
   PLATFORMS,
   MODELS,
+  CONFIG_MODELS,
 } from '../../constants/misc';
 import { stat } from 'fs/promises';
 
@@ -51,13 +52,11 @@ export default class LLMServices {
 
       onProgress?.({ status: 'Try to download models' });
       await this.downloadModels(
-        [
-          MODELS.GEMMA_3N_E4B_IT_FP16,
-          MODELS.NOMIC_EMBED_TEXT_V1_5,
-          MODELS.GEMMA_3_12B_IT_QAT,
-        ],
+        Array.from(new Set(Object.values(CONFIG_MODELS))),
         onProgress,
       );
+
+      // TODO: Download larger models in the background
 
       onProgress?.({
         status: 'LLM Service Initialization Complete',
@@ -796,18 +795,18 @@ export default class LLMServices {
 
       const list = await this.ollamaClient.list();
       if (
-        !list.models?.some((model) =>
-          model.name.includes(MODELS.NOMIC_EMBED_TEXT_V1_5),
+        !list.models?.some((model: any) =>
+          model.name.includes(CONFIG_MODELS.EMBEDDING_MODEL),
         )
       ) {
         return {
           success: false,
-          error: `Embedding model ${MODELS.NOMIC_EMBED_TEXT_V1_5} is not installed. Please download it first.`,
+          error: `Embedding model ${CONFIG_MODELS.EMBEDDING_MODEL} is not installed. Please download it first.`,
         };
       }
 
       const response = await this.ollamaClient.embed({
-        model: MODELS.NOMIC_EMBED_TEXT_V1_5,
+        model: CONFIG_MODELS.EMBEDDING_MODEL,
         input: input,
       });
 
@@ -829,7 +828,9 @@ export default class LLMServices {
       }
 
       const list = await this.ollamaClient.list();
-      if (!list.models?.some((model) => model.name.includes(request.model))) {
+      if (
+        !list.models?.some((model: any) => model.name.includes(request.model))
+      ) {
         return {
           success: false,
           error: `Model ${request.model} is not installed. Please download it first.`,

@@ -1,7 +1,7 @@
 import LLMService from '../llm/services';
 import parseMd from './parse-md';
 import { Section } from './parse-html';
-import { MODELS } from '../../constants/misc';
+import { CONFIG_MODELS } from '../../constants/misc';
 
 export default async function parseImage(
   base64Image: string,
@@ -27,7 +27,7 @@ async function extractTextFromBase64(base64Image: string): Promise<string> {
   console.info('Using LLM to extract text from image');
 
   const result = await LLMService.generate({
-    model: MODELS.GEMMA_3_12B_IT_QAT,
+    model: CONFIG_MODELS.VISION_MODEL,
     prompt:
       'Extract all text from this image. Return only the raw text content without any explanations or formatting. Do not include any other text in your response.',
     images: [base64Image],
