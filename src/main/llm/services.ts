@@ -293,7 +293,59 @@ export default class LLMServices {
   }
 
   private static async installOllamaOnWindows(): Promise<boolean> {
-    return false;
+    const executablePath = await this.getOllamaExecutablePath();
+
+    if (executablePath != null) {
+      console.info('Ollama already installed');
+      return true;
+    }
+
+    console.info('Installing Ollama on Windows...');
+
+    const files = await fs.promises.readdir(this.ollamaPath);
+    const installerFile = files.find(
+      (file) =>
+        file.toLowerCase().endsWith('.exe') ||
+        file.toLowerCase().endsWith('.msi'),
+    );
+
+    if (!installerFile) {
+      throw new Error('No installer (.exe or .msi) found in ollamaPath');
+    }
+
+    const installerPath = path.join(this.ollamaPath, installerFile);
+    console.log(`Found installer: ${installerPath}`);
+
+    return new Promise((resolve) => {
+      const installProcess = spawn(installerPath, ['/S'], {
+        stdio: 'inherit',
+        shell: true,
+      });
+
+      installProcess.on('close', async (code) => {
+        if (code !== 0) {
+          console.error('Installation failed with exit code:', code);
+          resolve(false);
+          return;
+        }
+
+        console.info('Installer finished running. Verifying installation...');
+        const ollamaInstalled = (await this.getOllamaExecutablePath()) !== null;
+
+        if (ollamaInstalled) {
+          console.info('Ollama installed successfully!');
+          resolve(true);
+        } else {
+          console.error('Ollama installation verification failed.');
+          resolve(false);
+        }
+      });
+
+      installProcess.on('error', (error) => {
+        console.error('Failed to run the installer:', error);
+        resolve(false);
+      });
+    });
   }
 
   private static async installOllamaOnLinux(): Promise<boolean> {

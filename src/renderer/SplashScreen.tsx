@@ -22,7 +22,9 @@ export default function SplashScreen() {
 
   useEffect(() => {
     if (progress?.completed === true) {
-      navigate('/dashboard');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     }
   }, [progress?.completed, navigate]);
 
