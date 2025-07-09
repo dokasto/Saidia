@@ -293,59 +293,113 @@ export default class LLMServices {
   }
 
   private static async installOllamaOnWindows(): Promise<boolean> {
-    const executablePath = await this.getOllamaExecutablePath();
-
-    if (executablePath != null) {
-      console.info('Ollama already installed');
+    // Check if we have a local installation
+    const localExecutablePath = await this.getOllamaExecutablePath();
+    if (localExecutablePath != null) {
+      console.info('Ollama already installed locally');
       return true;
     }
 
     console.info('Installing Ollama on Windows...');
 
     const files = await fs.promises.readdir(this.ollamaPath);
-    const installerFile = files.find(
+    const ollamaFile = files.find(
       (file) =>
         file.toLowerCase().endsWith('.exe') ||
-        file.toLowerCase().endsWith('.msi'),
+        file.toLowerCase().endsWith('.zip'),
     );
 
-    if (!installerFile) {
-      throw new Error('No installer (.exe or .msi) found in ollamaPath');
+    if (!ollamaFile) {
+      throw new Error(
+        'No Ollama executable or archive (.exe or .zip) found in ollamaPath',
+      );
     }
 
-    const installerPath = path.join(this.ollamaPath, installerFile);
-    console.log(`Found installer: ${installerPath}`);
+    const ollamaFilePath = path.join(this.ollamaPath, ollamaFile);
+    console.log(`Found Ollama file: ${ollamaFilePath}`);
 
-    return new Promise((resolve) => {
-      const installProcess = spawn(installerPath, ['/S'], {
-        stdio: 'inherit',
-        shell: true,
-      });
+    // If it's already an .exe file, just make sure it's executable
+    if (ollamaFile.toLowerCase().endsWith('.exe')) {
+      try {
+        // Ensure the file is executable
+        await fs.promises.chmod(ollamaFilePath, '755');
+        console.info('Ollama executable ready');
+        return true;
+      } catch (error) {
+        console.error('Failed to set executable permissions:', error);
+        return false;
+      }
+    }
 
-      installProcess.on('close', async (code) => {
-        if (code !== 0) {
-          console.error('Installation failed with exit code:', code);
+    // If it's a .zip file, extract it
+    if (ollamaFile.toLowerCase().endsWith('.zip')) {
+      return new Promise((resolve) => {
+        const extractProcess = spawn(
+          'powershell',
+          [
+            '-Command',
+            `Expand-Archive -Path "${ollamaFilePath}" -DestinationPath "${this.ollamaPath}" -Force`,
+          ],
+          {
+            stdio: ['pipe', 'pipe', 'pipe'],
+            shell: true,
+            windowsHide: true,
+          },
+        );
+
+        let stdout = '';
+        let stderr = '';
+
+        extractProcess.stdout?.on('data', (data) => {
+          stdout += data.toString();
+          console.log('Extraction output:', data.toString().trim());
+        });
+
+        extractProcess.stderr?.on('data', (data) => {
+          stderr += data.toString();
+          console.warn('Extraction stderr:', data.toString().trim());
+        });
+
+        extractProcess.on('close', async (code) => {
+          if (code !== 0) {
+            console.error('Extraction failed with exit code:', code);
+            console.error('Extraction stderr:', stderr);
+            resolve(false);
+            return;
+          }
+
+          console.info('Extraction completed. Verifying...');
+
+          // Check if we now have an executable
+          const localInstalled = await this.getOllamaExecutablePath();
+
+          if (localInstalled) {
+            console.info('Ollama extracted successfully!');
+
+            // Clean up archive file
+            try {
+              await fs.promises.unlink(ollamaFilePath);
+              console.log(`Cleaned up archive: ${ollamaFilePath}`);
+            } catch (error) {
+              console.warn('Failed to clean up archive:', error);
+            }
+
+            resolve(true);
+          } else {
+            console.error('Ollama extraction verification failed.');
+            console.error('Local installation check:', localInstalled);
+            resolve(false);
+          }
+        });
+
+        extractProcess.on('error', (error) => {
+          console.error('Failed to extract Ollama:', error);
           resolve(false);
-          return;
-        }
-
-        console.info('Installer finished running. Verifying installation...');
-        const ollamaInstalled = (await this.getOllamaExecutablePath()) !== null;
-
-        if (ollamaInstalled) {
-          console.info('Ollama installed successfully!');
-          resolve(true);
-        } else {
-          console.error('Ollama installation verification failed.');
-          resolve(false);
-        }
+        });
       });
+    }
 
-      installProcess.on('error', (error) => {
-        console.error('Failed to run the installer:', error);
-        resolve(false);
-      });
-    });
+    return false;
   }
 
   private static async installOllamaOnLinux(): Promise<boolean> {
@@ -374,11 +428,12 @@ export default class LLMServices {
 
     switch (process.platform) {
       case PLATFORMS.WINDOWS:
+        // Check for local executable
         const exeFile = files.find((file) =>
           file.toLowerCase().endsWith('.exe'),
         );
         if (!exeFile) {
-          throw new Error('No executable file found');
+          return null; // Don't throw error, just return null
         }
         return path.join(this.ollamaPath, exeFile);
       case PLATFORMS.MAC:
@@ -388,7 +443,7 @@ export default class LLMServices {
           file.toLowerCase().endsWith('.tar.gz'),
         );
         if (!linuxFile) {
-          throw new Error('No Linux file found');
+          return null; // Don't throw error, just return null
         }
         return path.join(this.ollamaPath, linuxFile);
       default:
@@ -489,7 +544,106 @@ export default class LLMServices {
   }
 
   private static async startOllamaOnWindows(): Promise<boolean> {
-    return false;
+    if (await this.isOllamaRunning()) {
+      console.info('Ollama is already running');
+      return true;
+    }
+
+    const ollamaExecutable = await this.getOllamaExecutablePath();
+
+    if (!ollamaExecutable) {
+      console.error('No Ollama executable found');
+      return false;
+    }
+
+    console.info(`Starting Ollama on Windows from: ${ollamaExecutable}`);
+
+    return new Promise((resolve, reject) => {
+      // Set up startup timeout
+      const startupTimeout = setTimeout(() => {
+        console.error('Ollama startup timed out after 30 seconds');
+        if (this.ollamaProcess && !this.ollamaProcess.killed) {
+          this.ollamaProcess.kill('SIGTERM');
+        }
+        reject(new Error('Ollama startup timed out'));
+      }, 30000); // 30 seconds timeout
+
+      // Windows-specific environment setup
+      const env = {
+        ...process.env,
+        OLLAMA_HOST: this.host,
+        OLLAMA_MODELS: this.ollamaPath,
+        // Ensure proper PATH for Windows
+        PATH: `${path.dirname(ollamaExecutable)};${process.env.PATH || ''}`,
+      };
+
+      this.ollamaProcess = spawn(ollamaExecutable, ['serve'], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env,
+        detached: false,
+        windowsHide: true,
+        cwd: path.dirname(ollamaExecutable), // Set working directory to executable location
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      // Capture stdout for debugging
+      this.ollamaProcess.stdout?.on('data', (data) => {
+        const output = data.toString();
+        stdout += output;
+        console.log('Ollama stdout:', output.trim());
+      });
+
+      // Capture stderr for error diagnosis
+      this.ollamaProcess.stderr?.on('data', (data) => {
+        const output = data.toString();
+        stderr += output;
+        console.warn('Ollama stderr:', output.trim());
+      });
+
+      // Handle process events
+      this.ollamaProcess.on('error', (error) => {
+        clearTimeout(startupTimeout);
+        console.error('Ollama process spawn error:', error);
+        reject(error);
+      });
+
+      this.ollamaProcess.on('exit', (code, signal) => {
+        clearTimeout(startupTimeout);
+        console.log(
+          `Ollama process exited with code ${code} and signal ${signal}`,
+        );
+
+        if (code !== 0 && code !== null) {
+          console.error('Ollama process failed to start properly');
+          console.error('Process stdout:', stdout);
+          console.error('Process stderr:', stderr);
+        }
+
+        this.ollamaProcess = null;
+      });
+
+      // Wait for Ollama to start and be ready
+      this.waitForPing(2000, 15) // Increased retries and delay for Windows
+        .then(() => {
+          clearTimeout(startupTimeout);
+          console.info('Ollama started successfully on Windows');
+          resolve(true);
+        })
+        .catch((pingError) => {
+          clearTimeout(startupTimeout);
+          console.error('Ollama ping failed:', pingError);
+          console.error('Process stdout:', stdout);
+          console.error('Process stderr:', stderr);
+
+          if (this.ollamaProcess && !this.ollamaProcess.killed) {
+            console.info('Terminating Ollama process due to ping failure');
+            this.ollamaProcess.kill('SIGTERM');
+          }
+          reject(pingError);
+        });
+    });
   }
 
   private static async startOllamaOnLinux(): Promise<boolean> {

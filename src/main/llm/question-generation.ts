@@ -80,7 +80,7 @@ async function generateQuestionsFromChunks(
 
     // Use Ollama structured output with proper format parameter
     let response = await LLMService.generate({
-      model: MODELS.GEMMA_3N_E4B_IT_FP16,
+      model: MODELS.GEMMA_3_12B_IT_QAT,
       prompt: prompt,
       stream: false,
       format: zodToJsonSchema(zodSchema),
