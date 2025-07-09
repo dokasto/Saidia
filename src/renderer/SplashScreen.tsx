@@ -4,6 +4,12 @@ import { Loader, Text, Progress } from '@mantine/core';
 import { LLMServiceProgress } from '../main/llm/services';
 import { useNavigate } from 'react-router-dom';
 
+// Helper function to format bytes to MB
+const formatBytesToMB = (bytes: number): string => {
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)} MB`;
+};
+
 export default function SplashScreen() {
   const navigate = useNavigate();
   const [progress, setProgress] = useState<LLMServiceProgress | null>(null);
@@ -37,7 +43,21 @@ export default function SplashScreen() {
         </Text>
         {progress?.completed !== true && (
           <div {...stylex.props(styles.loaderContent)}>
-            {progress?.percentage && progress.percentage > 0 ? (
+            {progress?.downloaded && progress?.total ? (
+              <div {...stylex.props(styles.progress)}>
+                <Progress.Root size={18}>
+                  <Progress.Section
+                    value={progress.percentage || 0}
+                    color="gray"
+                  >
+                    <Progress.Label>
+                      {formatBytesToMB(progress.downloaded)} /{' '}
+                      {formatBytesToMB(progress.total)}
+                    </Progress.Label>
+                  </Progress.Section>
+                </Progress.Root>
+              </div>
+            ) : progress?.percentage && progress.percentage > 0 ? (
               <div {...stylex.props(styles.progress)}>
                 <Progress.Root size={18}>
                   <Progress.Section value={progress.percentage} color="gray">
