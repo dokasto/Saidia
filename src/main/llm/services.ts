@@ -25,6 +25,13 @@ export interface LLMServiceProgress {
   completed?: boolean;
 }
 
+export interface GenerateRequest {
+  model: string;
+  prompt: string;
+  stream?: boolean;
+  format?: any;
+}
+
 export default class LLMServices {
   private static ollamaPath: string;
   private static ollamaProcess: ChildProcess | null = null;

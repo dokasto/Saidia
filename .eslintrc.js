@@ -15,8 +15,8 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@stylexjs/valid-styles': 'error',
     '@stylexjs/no-unused': 'error',
-    '@stylexjs/valid-shorthands': 'warning',
-    '@stylexjs/sort-keys': 'warning',
+    '@stylexjs/valid-shorthands': 'warn',
+    '@stylexjs/sort-keys': 'warn',
   },
   parserOptions: {
     ecmaVersion: 2022,

@@ -101,6 +101,7 @@
     "@electron/rebuild": "^4.0.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@stylexjs/babel-plugin": "^0.14.1",
+    "@stylexjs/eslint-plugin": "^0.14.1",
     "@stylexjs/postcss-plugin": "^0.14.1",
     "@svgr/webpack": "^8.1.0",
     "@teamsupercell/typings-for-css-modules-loader": "^2.5.2",

@@ -1,11 +1,18 @@
 import { CONFIG_MODELS } from '../../constants/misc';
-import { GenerateQuestionOptions } from '../../constants/types';
+import { QuestionType, QuestionDifficulty } from '../../types/Question';
 import { Embedding } from '../database/models';
 import * as DatabaseService from '../database/services';
 import { renderLog } from '../util';
 import LLMService from './services';
 import { generatePromptAndSchema } from './prompts';
 import { zodToJsonSchema } from 'zod-to-json-schema';
+
+// Define the interface inline to avoid import issues
+interface GenerateQuestionOptions {
+  count: number;
+  difficulty: QuestionDifficulty;
+  type: QuestionType;
+}
 
 export async function generateQuestions(
   subjectId: string,
