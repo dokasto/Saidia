@@ -13,11 +13,11 @@ import parseOdt from './parse-odt';
 import parsePdf from './parse-pdf';
 import parseTxt from './parse-text';
 import LLMService from '../llm/services';
-import DatabaseService from '../database/services';
+import * as DatabaseService from '../database/services';
 import { renderLog, uniqueID } from '../util';
-import { EmbeddingsHelper } from '../database/embeddings-helper';
+import { Embedding } from '../database/models';
 import parseImage from './parse-image';
-import { IMAGE_EXTENSIONS } from '../../constants/misc';
+import { IMAGE_EXTENSIONS, PLATFORMS } from '../../constants/misc';
 import { generateEmbeddingPrompt } from '../llm/prompts';
 const convert = require('heic-convert');
 
@@ -54,7 +54,7 @@ export default class FileManager {
     const fileId = storedFile.filename;
 
     try {
-      const createFileResult = await DatabaseService.createFile(
+      const createFileResult = await DatabaseService.FileService.createFile(
         fileId,
         subjectId,
         originalFilename,
@@ -69,7 +69,8 @@ export default class FileManager {
         };
       }
 
-      const subject = await DatabaseService.getSubject(subjectId);
+      const subject =
+        await DatabaseService.SubjectService.getSubject(subjectId);
       if (subject == null) {
         console.warn('Subject not found');
         return {
@@ -87,8 +88,7 @@ export default class FileManager {
 
       for (let i = 0; i < embeddings.length; i++) {
         if (doc[i]?.content != null && doc[i].content.length > 0) {
-          EmbeddingsHelper.insertEmbedding(
-            uniqueID(),
+          Embedding.insertEmbedding(
             subjectId,
             fileId,
             doc[i].content.join('\n\n'),
@@ -185,11 +185,60 @@ export default class FileManager {
   }
 
   static async deleteFile(relativePath: string): Promise<void> {
+    const platform = process.platform;
+
     try {
-      await unlink(relativePath);
+      if (platform === PLATFORMS.MAC) {
+        await FileManager.deleteFileMac(relativePath);
+      } else if (platform === PLATFORMS.WINDOWS) {
+        await FileManager.deleteFileWindows(relativePath);
+      } else if (platform === PLATFORMS.LINUX) {
+        await FileManager.deleteFileLinux(relativePath);
+      } else {
+        await unlink(relativePath);
+      }
       console.log('File deleted:', relativePath);
     } catch (error) {
       console.error('Failed to delete file:', error);
+      throw error;
+    }
+  }
+
+  static async deleteFileMac(relativePath: string): Promise<void> {
+    try {
+      await unlink(relativePath);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  static async deleteFileWindows(relativePath: string): Promise<void> {
+    const absolutePath = path.resolve(relativePath);
+    try {
+      await unlink(absolutePath);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return;
+      }
+      if (error.code === 'EACCES' || error.code === 'EPERM') {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        await unlink(absolutePath);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  static async deleteFileLinux(relativePath: string): Promise<void> {
+    try {
+      await unlink(relativePath);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return;
+      }
       throw error;
     }
   }

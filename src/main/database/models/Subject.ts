@@ -1,5 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import Connection from '../connection';
+import { File } from './File';
+import { Question } from './Question';
 
 interface SubjectAttributes {
   subject_id: string;
@@ -17,8 +19,8 @@ export class Subject
   public name!: string;
 
   // Associations
-  public readonly files?: any[];
-  public readonly questions?: any[];
+  public readonly files?: File[];
+  public readonly questions?: Question[];
 }
 
 Subject.init(

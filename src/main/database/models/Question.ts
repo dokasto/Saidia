@@ -1,17 +1,21 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import Connection from '../connection';
+import { QuestionDifficulty, QuestionType } from '../../../types/Question';
+import { Subject } from './Subject';
 
 interface QuestionAttributes {
   question_id: string;
   subject_id: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  content: string;
-  options_json: string;
+  difficulty: QuestionDifficulty;
+  type: QuestionType;
+  title: string;
+  options?: string;
+  answer?: number;
   created_at: Date;
 }
 
 interface QuestionCreationAttributes
-  extends Optional<QuestionAttributes, 'created_at'> {}
+  extends Optional<QuestionAttributes, 'created_at' | 'options' | 'answer'> {}
 
 export class Question
   extends Model<QuestionAttributes, QuestionCreationAttributes>
@@ -19,14 +23,15 @@ export class Question
 {
   public question_id!: string;
   public subject_id!: string;
-  public difficulty!: 'easy' | 'medium' | 'hard';
-  public content!: string;
-  public options_json!: string;
+  public difficulty!: QuestionDifficulty;
+  public type!: QuestionType;
+  public title!: string;
+  public options?: string;
+  public answer?: number;
   public created_at!: Date;
 
   // Associations
-  public readonly subject?: any;
-  public readonly tags?: any[];
+  public readonly subject?: Subject;
 }
 
 Question.init(
@@ -45,15 +50,23 @@ Question.init(
       onDelete: 'CASCADE',
     },
     difficulty: {
-      type: DataTypes.ENUM('easy', 'medium', 'hard'),
-      allowNull: true,
+      type: DataTypes.ENUM(...Object.values(QuestionDifficulty)),
+      allowNull: false,
     },
-    content: {
+    type: {
+      type: DataTypes.ENUM(...Object.values(QuestionType)),
+      allowNull: false,
+    },
+    title: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    options: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    options_json: {
-      type: DataTypes.TEXT,
+    answer: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
     created_at: {

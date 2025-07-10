@@ -1,7 +1,7 @@
 import { CONFIG_MODELS } from '../../constants/misc';
 import { GenerateQuestionOptions } from '../../constants/types';
-import { EmbeddingsHelper } from '../database/embeddings-helper';
-import DatabaseService from '../database/services';
+import { Embedding } from '../database/models';
+import * as DatabaseService from '../database/services';
 import { renderLog } from '../util';
 import LLMService from './services';
 import { generatePromptAndSchema } from './prompts';
@@ -13,7 +13,7 @@ export async function generateQuestions(
 ) {
   const limit = 1000; // 1 million just to get all results
   try {
-    const subject = await DatabaseService.getSubject(subjectId);
+    const subject = await DatabaseService.SubjectService.getSubject(subjectId);
     if (subject == null) {
       return { success: false, error: 'Subject not found', data: null };
     }
@@ -23,7 +23,7 @@ export async function generateQuestions(
       return { success: false, error: 'Embedding not found', data: null };
     }
 
-    const relevantChunks = EmbeddingsHelper.searchSimilar(
+    const relevantChunks = Embedding.searchSimilar(
       embeddings[0],
       limit,
       subjectId,

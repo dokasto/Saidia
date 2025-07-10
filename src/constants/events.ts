@@ -17,6 +17,7 @@ export const FILE_EVENTS = {
   GET_ONE: 'db:getFile',
   UPDATE: 'db:updateFile',
   DELETE: 'db:deleteFile',
+  DELETE_BY_SUBJECT: 'db:deleteFilesBySubject',
 } as const;
 
 // Question Events
@@ -26,14 +27,7 @@ export const QUESTION_EVENTS = {
   GET_ONE: 'db:getQuestion',
   UPDATE: 'db:updateQuestion',
   DELETE: 'db:deleteQuestion',
-} as const;
-
-// Tag Events
-export const TAG_EVENTS = {
-  CREATE: 'db:createTag',
-  GET_ALL: 'db:getTags',
-  ADD_TO_QUESTION: 'db:addTagsToQuestion',
-  REMOVE_FROM_QUESTION: 'db:removeTagFromQuestion',
+  DELETE_BY_SUBJECT: 'db:deleteQuestionsBySubject',
 } as const;
 
 // Embedding Events
@@ -42,6 +36,8 @@ export const EMBEDDING_EVENTS = {
   SEARCH_SIMILAR: 'db:searchSimilar',
   GET_BY_FILE: 'db:getEmbeddingsByFile',
   GET_BY_SUBJECT: 'db:getEmbeddingsBySubject',
+  DELETE_BY_FILE: 'db:deleteEmbeddingsByFile',
+  DELETE_BY_SUBJECT: 'db:deleteEmbeddingsBySubject',
 } as const;
 
 // File System Events
@@ -83,7 +79,6 @@ export const IPC_EVENTS = {
   ...SUBJECT_EVENTS,
   ...FILE_EVENTS,
   ...QUESTION_EVENTS,
-  ...TAG_EVENTS,
   ...EMBEDDING_EVENTS,
   ...FILE_SYSTEM_EVENTS,
   ...DOWNLOAD_EVENTS,

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { spawn, ChildProcess } from 'child_process';
-import { ChatRequest, Ollama, type GenerateRequest } from 'ollama';
+import { Ollama } from 'ollama';
 import FileManager from '../files/file-manager';
 import { copyDirectory, ensureDirectory } from '../util';
 import {
