@@ -46,10 +46,6 @@
 - **Local AI Processing**: Integration with Ollama for local AI model processing
 - **Type Safety**: Full TypeScript support with strict type checking
 
-## 📸 Screenshots
-
-> _Screenshots coming soon - The application features a clean, modern interface built with Mantine UI_
-
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -154,45 +150,7 @@ const questions = await window.electronAPI.generateQuestions(
 | **MD**     | Markdown files           | Markdown parsing       |
 | **Images** | JPG, PNG, HEIC, etc.     | OCR text extraction    |
 
-## 🏗️ Architecture
-
-Saidia follows a modern Electron architecture with clear separation of concerns:
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Renderer      │    │     Main        │    │   Database      │
-│   Process       │◄──►│   Process       │◄──►│   Layer         │
-│                 │    │                 │    │                 │
-│ • React UI      │    │ • IPC Handlers  │    │ • SQLite        │
-│ • TypeScript    │    │ • File Manager  │    │ • Vector Table  │
-│ • Mantine UI    │    │ • LLM Services  │    │ • Sequelize     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
 ## 🧪 Development
-
-### Project Structure
-
-```
-src/
-├── main/                    # Electron main process
-│   ├── database/           # Database layer
-│   │   ├── connection.ts   # Database connection
-│   │   ├── models/         # Sequelize models
-│   │   ├── services/       # Business logic
-│   │   └── ipc-handlers/   # IPC handlers
-│   ├── files/              # File management
-│   ├── llm/                # AI/LLM services
-│   └── main.ts             # Main process entry
-├── renderer/               # React frontend
-│   ├── components/         # React components
-│   ├── hooks/              # Custom hooks
-│   └── App.tsx             # Main app component
-└── constants/              # Shared constants
-    ├── types.ts            # TypeScript types
-    ├── events.ts           # IPC events
-    └── misc.ts             # Miscellaneous constants
-```
 
 ### Development Commands
 
@@ -216,30 +174,14 @@ npm run lint:fix
 npm run package
 ```
 
-### Environment Variables
-
-```bash
-NODE_ENV=development|production
-DEBUG_PROD=true|false
-START_MINIMIZED=true|false
-```
-
 ## 📚 Documentation
 
-### Comprehensive Guides
+For comprehensive documentation, see the [Wiki](https://github.com/your-username/Saidia/wiki).
 
-- **[Wiki Documentation](WIKI.md)** - Complete technical documentation
-- **[API Reference](WIKI.md#api-reference)** - IPC handlers and database operations
-- **[Database Schema](WIKI.md#database-system)** - Database structure and relationships
-- **[Development Guide](WIKI.md#development-guide)** - Contributing and development workflow
-
-### Key Documentation Sections
-
-- **Architecture Overview** - System design and component relationships
-- **Database Operations** - CRUD operations and vector search
-- **File Management** - File processing and storage
-- **AI Integration** - Question generation and embeddings
-- **Deployment** - Building and distributing the application
+- **Architecture** - System design and component relationships
+- **API Reference** - IPC handlers and database operations
+- **Database Schema** - Database structure and relationships
+- **Development Guide** - Development workflow and best practices
 
 ## 🤝 Contributing
 
@@ -261,19 +203,6 @@ _Note: This is proprietary software with restricted development access._
 ## 📄 License
 
 This project is proprietary software. All rights reserved. See the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Electron** - Cross-platform desktop framework
-- **React** - UI library
-- **Mantine** - Component library
-- **Ollama** - Local AI model processing
-- **sqlite-vec** - Vector similarity search
-
-## 📞 Support
-
-- **Documentation**: [Wiki](WIKI.md)
-- **Contact**: Please contact the development team for support and questions
 
 ---
 
