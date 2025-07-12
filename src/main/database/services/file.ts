@@ -53,6 +53,8 @@ export default class FileService {
     // Get all files for the subject to clean up physical files
     const files = await File.findAll({ where: { subject_id } });
 
+    await FileManager.cleanupSubjectFiles(subject_id);
+
     // Delete physical files and associated embeddings
     for (const file of files) {
       await FileManager.deleteFile(file.filepath);

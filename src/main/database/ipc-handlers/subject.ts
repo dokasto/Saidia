@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ipcMain } from 'electron';
+import crypto from 'crypto';
 import SubjectService from '../services/subject';
 import { SUBJECT_EVENTS } from '../../../constants/events';
-import { IPCResponse } from '../../setup-ipc-handlers';
-import { SubjectResponse } from '../../../types/Subject';
-import { DeleteSubjectResponse } from '../../../types/Subject';
-import crypto from 'crypto';
+import {
+  IPCResponse,
+  SubjectResponse,
+  DeleteSubjectResponse,
+} from '../../../types';
 
 export default function setupSubjectHandlers() {
   ipcMain.handle(
@@ -44,10 +47,10 @@ export default function setupSubjectHandlers() {
     SUBJECT_EVENTS.GET_ONE,
     async (
       _event,
-      subject_id: string,
+      subjectId: string,
     ): Promise<IPCResponse<SubjectResponse | null>> => {
       try {
-        const subject = await SubjectService.getSubject(subject_id);
+        const subject = await SubjectService.getSubject(subjectId);
         return { success: true, data: subject };
       } catch (error) {
         return {
@@ -60,9 +63,9 @@ export default function setupSubjectHandlers() {
 
   ipcMain.handle(
     SUBJECT_EVENTS.UPDATE,
-    async (_event, subject_id: string, updates: any): Promise<IPCResponse> => {
+    async (_event, subjectId: string, updates: any): Promise<IPCResponse> => {
       try {
-        const result = await SubjectService.updateSubject(subject_id, updates);
+        const result = await SubjectService.updateSubject(subjectId, updates);
         return { success: result };
       } catch (error) {
         return {
@@ -77,10 +80,10 @@ export default function setupSubjectHandlers() {
     SUBJECT_EVENTS.DELETE,
     async (
       _event,
-      subject_id: string,
+      subjectId: string,
     ): Promise<IPCResponse<DeleteSubjectResponse>> => {
       try {
-        const result = await SubjectService.deleteSubject(subject_id);
+        const result = await SubjectService.deleteSubject(subjectId);
         return { success: true, data: result };
       } catch (error) {
         return {

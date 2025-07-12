@@ -8,6 +8,5 @@ export default function setupDatabaseIPCHandlers() {
   setupSubjectHandlers();
   setupFileHandlers();
   setupQuestionHandlers();
-
   setupEmbeddingHandlers();
 }
