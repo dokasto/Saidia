@@ -1,11 +1,19 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { AppShell, Burger } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import SideMenu from './SideMenu';
 import { APP_NAME } from '../../constants/misc';
 
 export default function Dashboard() {
+  const [activeSubject, setActiveSubject] = useState<string>(
+    'No Selected Subject',
+  );
   const [opened, { toggle }] = useDisclosure();
+
+  function handleSelectSubject(subjectName: string) {
+    setActiveSubject(subjectName ?? 'No Selected Subject');
+  }
 
   return (
     <AppShell
@@ -23,10 +31,13 @@ export default function Dashboard() {
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
-        <SideMenu />
+        <SideMenu
+          onSelectSubject={handleSelectSubject}
+          activeSubject={activeSubject}
+        />
       </AppShell.Navbar>
 
-      <AppShell.Main>Main</AppShell.Main>
+      <AppShell.Main>{activeSubject}</AppShell.Main>
     </AppShell>
   );
 }
