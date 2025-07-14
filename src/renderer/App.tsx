@@ -4,6 +4,7 @@ import '@mantine/core/styles.css';
 import './App.css';
 import { createTheme, MantineProvider } from '@mantine/core';
 import Dashboard from './components/Dashboard';
+import SubjectProvider from './subjects/subjectProvider';
 
 const theme = createTheme({
   fontFamily: 'Nunito, sans-serif',
@@ -12,12 +13,14 @@ const theme = createTheme({
 export default function App() {
   return (
     <MantineProvider theme={theme}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </Router>
+      <SubjectProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+          </Routes>
+        </Router>
+      </SubjectProvider>
     </MantineProvider>
   );
 }
