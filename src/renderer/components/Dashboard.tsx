@@ -1,5 +1,4 @@
-import React, { useContext } from 'react';
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { AppShell, Burger } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import SideMenu from './SideMenu';
@@ -7,8 +6,11 @@ import { APP_NAME } from '../../constants/misc';
 import { SubjectContext } from '../subjects/subjectProvider';
 
 export default function Dashboard() {
+  const [activeSubject, setActiveSubject] = useState<string>(
+    'No Selected Subject',
+  );
   const [opened, { toggle }] = useDisclosure();
-  const { selected } = useContext(SubjectContext);
+
   return (
     <AppShell
       header={{ height: 60 }}
@@ -25,10 +27,13 @@ export default function Dashboard() {
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
-        <SideMenu />
+        <SideMenu
+          onSelectSubject={handleSelectSubject}
+          activeSubject={activeSubject}
+        />
       </AppShell.Navbar>
 
-      <AppShell.Main>{selected?.name}</AppShell.Main>
+      <AppShell.Main>Main</AppShell.Main>
     </AppShell>
   );
 }
