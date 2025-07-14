@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   NavLink,
   Modal,
@@ -18,146 +18,59 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { SUBJECT_EVENTS } from '../../constants/events';
+import { Subject } from '../../main/database/models';
+import { SubjectContext } from '../subjects/subjectProvider';
 
-type SideMenuProps = {
-  onSelectSubject: (subjectName: string) => void;
-  activeSubject: string | null;
-};
-
-type Subject = {
-  subject_id: string;
-  name: string;
-};
-
-export default function SideMenu({
-  onSelectSubject,
-  activeSubject,
-}: SideMenuProps) {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [newSubject, setNewSubject] = useState('');
+export default function SideMenu() {
+  const { create, changeName, remove, selected, subjects, getAll, select } =
+    useContext(SubjectContext);
   const [opened, { open, close }] = useDisclosure(false);
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
+  const [newSubject, setNewSubject] = useState<string>('');
 
   const [editOpened, { open: openEdit, close: closeEdit }] =
     useDisclosure(false);
   const [editSubjectId, setEditSubjectId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState('');
 
-  //>>>>>> CREATE >>>>>>>
-  async function handleAddSubject() {
-    if (!newSubject.trim()) return;
-
-    const response = await window.electron.ipcRenderer.invoke(
-      SUBJECT_EVENTS.CREATE,
-      newSubject,
-    );
-
-    if (response.success && response.data) {
-      setSubjects((prev) => [...prev, response.data]);
+  const handleAddSubject = useCallback(async () => {
+    if (newSubject == null || newSubject.trim().length < 0) return;
+    const success = await create(newSubject.trim());
+    if (success) {
       setNewSubject('');
       close();
-    } else {
-      console.error(response.error);
+      await getAll();
     }
-    console.log(response);
-  }
+  }, [newSubject, getAll]);
 
-  //<<<<<< READ >>>>>>
-  async function getAll() {
-    const res = await window.electron.ipcRenderer.invoke(
-      SUBJECT_EVENTS.GET_ALL,
-    );
-    console.log(res);
-    return res;
-  }
-
-  getAll();
-
-  useEffect(() => {
-    async function fetchSubjectsData() {
-      const response = await getAll();
-
-      try {
-        if (response.success && response.data) {
-          setSubjects(response.data);
-        } else {
-          throw new Error('No subjects found');
-        }
-      } catch (err) {
-        console.error('failed to fetch subjects', err);
-      }
-    }
-    fetchSubjectsData();
-  }, []);
-
-  function handleClick(subjectName: string) {
-    onSelectSubject(subjectName);
-  }
-
-  //>>>>>>>>>>UPDATE<<<<<<<<<<<
-
-  async function update(subjectId: string, updates: { name: string }) {
-    const response = await window.electron.ipcRenderer.invoke(
-      SUBJECT_EVENTS.UPDATE,
-      subjectId,
-      updates,
-    );
-
-    console.log('Update response:', response);
-    return response;
-  }
-
-  async function handleSaveEditedSubject() {
+  const handleSaveEditedSubject = useCallback(async () => {
     if (editSubjectId && editedName.trim()) {
-      const response = await update(editSubjectId, { name: editedName });
+      const success = await changeName(editSubjectId, editedName);
 
-      if (response.success) {
-        setSubjects((prevSubjects) =>
-          prevSubjects.map((subj) =>
-            subj.subject_id === editSubjectId
-              ? { ...subj, name: editedName }
-              : subj,
-          ),
-        );
-
-        if (
-          activeSubject &&
-          subjects.find((s) => s.subject_id === editSubjectId)?.name ===
-            activeSubject
-        ) {
-          onSelectSubject(editedName);
-        }
-        closeEdit();
+      if (success) {
+        await getAll();
       }
+      closeEdit();
     }
-  }
+  }, [editSubjectId, editedName, getAll]);
 
-  //>>>>>>>>>>DELETE<<<<<<<<<<<
-
-  async function remove(subject_id: string) {
-    const response = await window.electron.ipcRenderer.invoke(
-      SUBJECT_EVENTS.DELETE,
-      subject_id,
-    );
-
-    console.log('Delete response:', response);
-    return response;
-  }
-
-  async function handleDelete(subject: Subject) {
-    const res = await remove(subject.subject_id);
-    if (res.success) {
-      setSubjects((prev) =>
-        prev.filter((s) => s.subject_id !== subject.subject_id),
-      );
-
-      if (activeSubject === subject.name) {
-        onSelectSubject('No Selected Subject');
+  const handleDelete = useCallback(
+    async (subjectId: string) => {
+      const success = await remove(subjectId);
+      if (success) {
+        alert('success!');
+        await getAll();
       }
-    } else {
-      console.error(res.error);
-    }
-  }
+    },
+    [remove, getAll],
+  );
+
+  const handleSelected = useCallback(
+    (subjectId: string) => {
+      select(subjectId);
+    },
+    [select],
+  );
 
   return (
     <>
@@ -182,8 +95,8 @@ export default function SideMenu({
             <Box style={{ flex: 1 }}>
               <NavLink
                 label={subject.name}
-                active={subject.name === activeSubject}
-                onClick={() => handleClick(subject.name)}
+                active={subject.subject_id === selected?.subject_id}
+                onClick={() => handleSelected(subject.subject_id)}
                 styles={{
                   root: {
                     color: '#000',
@@ -223,7 +136,6 @@ export default function SideMenu({
                 <Menu.Item
                   leftSection={<IconEdit size={14} />}
                   onClick={() => {
-                    console.log('Edit', subject.name);
                     setEditSubjectId(subject.subject_id);
                     setEditedName(subject.name);
                     openEdit();
@@ -235,7 +147,7 @@ export default function SideMenu({
                   color="red"
                   leftSection={<IconTrash size={14} />}
                   onClick={() => {
-                    handleDelete(subject);
+                    handleDelete(subject.subject_id);
                   }}
                 >
                   Delete
