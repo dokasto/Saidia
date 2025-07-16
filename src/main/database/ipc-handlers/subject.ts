@@ -8,6 +8,9 @@ import {
   SubjectResponse,
   DeleteSubjectResponse,
 } from '../../../types';
+import FileService from '../services/file';
+import { EmbeddingService, QuestionService } from '../services';
+import { deleteAllSubjectFiles } from '../../files/manager';
 
 export default function setupSubjectHandlers() {
   ipcMain.handle(
@@ -82,15 +85,65 @@ export default function setupSubjectHandlers() {
       _event,
       subjectId: string,
     ): Promise<IPCResponse<DeleteSubjectResponse>> => {
+      const errors = [];
+
       try {
-        const result = await SubjectService.deleteSubject(subjectId);
-        return { success: true, data: result };
+        await SubjectService.deleteSubject(subjectId);
       } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : String(error),
-        };
+        errors.push(
+          `SubjectService.deleteSubject: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
+
+      try {
+        await FileService.deleteFilesBySubject(subjectId);
+      } catch (error) {
+        errors.push(
+          `FileService.deleteFilesBySubject: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+
+      try {
+        await QuestionService.deleteQuestionsBySubject(subjectId);
+      } catch (error) {
+        errors.push(
+          `QuestionService.deleteQuestionsBySubject: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+
+      try {
+        await EmbeddingService.deleteEmbeddingsBySubject(subjectId);
+      } catch (error) {
+        errors.push(
+          `EmbeddingService.deleteEmbeddingsBySubject: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+
+      try {
+        await deleteAllSubjectFiles(subjectId);
+      } catch (error) {
+        errors.push(
+          `deleteAllSubjectFiles: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+
+      if (errors.length === 0) {
+        return { success: true };
+      }
+      return {
+        success: false,
+        error: errors.join(','),
+      };
     },
   );
 }

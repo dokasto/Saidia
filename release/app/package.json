@@ -9,6 +9,7 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
+    "@opendocsg/pdf2md": "^0.2.1",
     "better-sqlite3": "^12.2.0",
     "heic-convert": "^2.1.0",
     "mammoth": "^1.9.1",

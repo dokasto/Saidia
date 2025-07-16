@@ -1,6 +1,5 @@
-import FileManager from '../../files/file-manager';
 import { FileResponse } from '../../../types/File';
-import { File, Embedding } from '../models';
+import { File } from '../models';
 
 export default class FileService {
   static async createFile(
@@ -40,21 +39,11 @@ export default class FileService {
   }
 
   static async deleteFile(fileId: string): Promise<boolean> {
-    const file = await File.findByPk(fileId);
-    if (file) {
-      await FileManager.deleteFile(file.filepath);
-    }
-
-    Embedding.deleteEmbeddingsByFile(fileId);
     const deletedCount = await File.destroy({ where: { file_id: fileId } });
     return deletedCount > 0;
   }
 
   static async deleteFilesBySubject(subjectId: string): Promise<boolean> {
-    await FileManager.cleanupSubjectFiles(subjectId);
-
-    Embedding.deleteEmbeddingsBySubject(subjectId);
-
     const deletedCount = await File.destroy({
       where: { subject_id: subjectId },
     });

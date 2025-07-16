@@ -1,3 +1,4 @@
+/* eslint-disable no-cond-assign */
 import { splitText } from './clean';
 
 export interface Section {

@@ -1,25 +1,12 @@
 export const APP_NAME = 'Saidia';
 
-export const IMAGE_EXTENSIONS = [
-  'jpg',
-  'jpeg',
-  'png',
-  'bmp',
-  'tiff',
-  'webp',
-  'heic',
-  'heif',
-  'heif-sequence',
-  'heic-sequence',
-] as const;
-
 export const FILE_EXTENSIONS = [
   'pdf',
   'doc',
   'docx',
   'txt',
   'md',
-  ...IMAGE_EXTENSIONS,
+  'odt',
 ] as const;
 
 export const PLATFORMS = {

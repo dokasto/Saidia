@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import QuestionService from '../services/question';
 import { QUESTION_EVENTS } from '../../../constants/events';
-import { IPCResponse } from '../../setup-ipc-handlers';
+import { IPCResponse } from '../../../types';
 import {
   DeleteQuestionResponse,
   TQuestion,

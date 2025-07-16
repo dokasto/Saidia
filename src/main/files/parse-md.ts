@@ -1,11 +1,25 @@
+/* eslint-disable prefer-template */
+import * as fs from 'fs';
+import { promisify } from 'util';
 import { splitText } from './clean';
 import { Section } from './parse-html';
 
-export default function parseMd(markdownText: string): Section[] {
-  const sections: Section[] = [];
-  const lines = markdownText.split('\n');
+const readFile = promisify(fs.readFile);
 
-  // the header and text of each section
+export default async function parseMd({
+  filePath,
+  markdownText,
+}: {
+  filePath?: string;
+  markdownText?: string;
+}): Promise<Section[]> {
+  const markdown = filePath ? await readFile(filePath, 'utf-8') : markdownText;
+
+  if (markdown == null) return [];
+
+  const sections: Section[] = [];
+  const lines = markdown.split('\n');
+
   let header: string | null = null;
   let text = '';
 
@@ -14,7 +28,6 @@ export default function parseMd(markdownText: string): Section[] {
     if (isHeader) {
       if (header !== null) {
         if (text === '') {
-          // found a section with no text
           return;
         }
         sections.push({
@@ -24,18 +37,16 @@ export default function parseMd(markdownText: string): Section[] {
       }
 
       header = line.replace(/#/g, '').trim();
-      text = ''; // begin searching for text
+      text = '';
     } else {
       text += line + '\n';
     }
   });
 
-  if (header !== null) {
-    sections.push({
-      section: header,
-      content: splitText(text),
-    });
-  }
+  sections.push({
+    section: header ?? '',
+    content: splitText(text),
+  });
 
   return sections;
 }

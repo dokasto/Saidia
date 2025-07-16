@@ -1,6 +1,11 @@
+import * as fs from 'fs';
+import { promisify } from 'util';
 import { Section } from './parse-html';
 
-export default function parseTxt(data: string): Section[] {
+const readFile = promisify(fs.readFile);
+
+export default async function parseTxt(filePath: string): Promise<Section[]> {
+  const data = await readFile(filePath, 'utf-8');
   // chunk the data based on new line characters
   const lines = data.split('\n');
   // further chunk the data based on patterns which indicate a new sentence
@@ -22,7 +27,7 @@ export default function parseTxt(data: string): Section[] {
   return [
     {
       section: content[0], // make the first sentence the section name
-      content: content,
+      content,
     },
   ];
 }

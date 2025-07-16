@@ -42,13 +42,6 @@ export const EMBEDDING_EVENTS = {
 
 // File System Events
 export const FILE_SYSTEM_EVENTS = {
-  UPLOAD_AND_PROCESS: 'file:uploadAndProcess',
-  GET_STORAGE_PATH: 'file:getStoragePath',
-  GET_ABSOLUTE_PATH: 'file:getAbsolutePath',
-  EXISTS: 'file:exists',
-  GET_INFO: 'file:getInfo',
-  CHECK_INITIALIZATION: 'file:checkInitialization',
-  GET_SUBJECT_FILE_PATH: 'file:getSubjectFilePath',
   LIST_SUBJECT_FILES: 'file:listSubjectFiles',
   DELETE_SUBJECT_FILE: 'file:deleteSubjectFile',
 } as const;

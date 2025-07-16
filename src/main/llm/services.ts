@@ -1,10 +1,17 @@
-import { app } from 'electron';
+/* eslint-disable no-console */
+/* eslint-disable no-case-declarations */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-console */
+/* eslint-disable no-case-declarations */
+/* eslint-disable no-use-before-define */
 import * as fs from 'fs';
+import { stat } from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import { app } from 'electron';
 import { spawn, ChildProcess } from 'child_process';
 import { Ollama } from 'ollama';
-import FileManager from '../files/file-manager';
 import { copyDirectory, ensureDirectory } from '../util';
 import {
   ARCHS,
@@ -13,7 +20,7 @@ import {
   MODELS,
   CONFIG_MODELS,
 } from '../../constants/misc';
-import { stat } from 'fs/promises';
+import download from '../files/dowload';
 
 export interface LLMServiceProgress {
   error?: Error;
@@ -34,8 +41,11 @@ export interface GenerateRequest {
 
 export default class LLMServices {
   private static ollamaPath: string;
+
   private static ollamaProcess: ChildProcess | null = null;
+
   private static host: string = 'http://127.0.0.1:11434';
+
   private static ollamaClient: Ollama = new Ollama({ host: this.host });
 
   static async init(
@@ -44,9 +54,7 @@ export default class LLMServices {
     try {
       console.log('=== LLM Service Initialization Starting ===');
 
-      const userDataPath = app.getPath('userData');
-      this.ollamaPath = path.join(userDataPath, 'files', 'ollama');
-      ensureDirectory(this.ollamaPath);
+      this.setOllamaPath();
 
       if (!(await this.maybeDownloadOllama(onProgress))) return;
 
@@ -81,6 +89,12 @@ export default class LLMServices {
     }
   }
 
+  private static setOllamaPath() {
+    const userDataPath = app.getPath('userData');
+    this.ollamaPath = path.join(userDataPath, 'files', 'ollama');
+    ensureDirectory(this.ollamaPath);
+  }
+
   private static getOllamaDownloadUrl(): string {
     const platform = os.platform();
     const arch = os.arch();
@@ -93,9 +107,8 @@ export default class LLMServices {
       case PLATFORMS.LINUX:
         if (arch === ARCHS.ARM64) {
           return OLLAMA_DOWNLOAD_URLS.LINUX.ARM64;
-        } else {
-          return OLLAMA_DOWNLOAD_URLS.LINUX.AMD64;
         }
+        return OLLAMA_DOWNLOAD_URLS.LINUX.AMD64;
       default:
         throw new Error(`Unsupported platform: ${platform} ${arch}`);
     }
@@ -129,19 +142,15 @@ export default class LLMServices {
       status: 'starting ollama download',
     });
 
-    const result = await FileManager.downloadFiles(
-      [url],
-      this.ollamaPath,
-      (progress) => {
-        onProgress?.({
-          filename: progress.filename || filename,
-          downloaded: progress.downloaded,
-          total: progress.total,
-          percentage: progress.percentage,
-          status: 'downloading ollama',
-        });
-      },
-    );
+    const result = await download([url], this.ollamaPath, (progress) => {
+      onProgress?.({
+        filename: progress.filename || filename,
+        downloaded: progress.downloaded,
+        total: progress.total,
+        percentage: progress.percentage,
+        status: 'downloading ollama',
+      });
+    });
 
     if (result[0]?.success) {
       const platform = os.platform();
@@ -179,11 +188,11 @@ export default class LLMServices {
     const platform = os.platform();
     switch (platform) {
       case PLATFORMS.MAC:
-        return await this.installOllamaOnMac();
+        return this.installOllamaOnMac();
       case PLATFORMS.WINDOWS:
-        return await this.installOllamaOnWindows();
+        return this.installOllamaOnWindows();
       case PLATFORMS.LINUX:
-        return await this.installOllamaOnLinux();
+        return this.installOllamaOnLinux();
       default:
         console.error(`Unsupported platform: ${platform}`);
         return false;
@@ -213,9 +222,8 @@ export default class LLMServices {
     if (success) {
       console.info('Ollama.app extracted successfully');
       return true;
-    } else {
-      throw new Error('Failed to extract Ollama.app from DMG');
     }
+    throw new Error('Failed to extract Ollama.app from DMG');
   }
 
   private static async extractOllamaAppFromDMG(
@@ -414,16 +422,17 @@ export default class LLMServices {
 
   private static async maybeStartOllama(): Promise<boolean> {
     if (await this.isOllamaRunning()) {
+      console.info('Ollama is already running');
       return true;
     }
     const platform = os.platform();
     switch (platform) {
       case PLATFORMS.WINDOWS:
-        return await this.startOllamaOnWindows();
+        return this.startOllamaOnWindows();
       case PLATFORMS.MAC:
-        return await this.startOllamaOnMac();
+        return this.startOllamaOnMac();
       case PLATFORMS.LINUX:
-        return await this.startOllamaOnLinux();
+        return this.startOllamaOnLinux();
       default:
         throw new Error(`Unsupported platform: ${platform}`);
     }
@@ -443,7 +452,7 @@ export default class LLMServices {
         }
         return path.join(this.ollamaPath, exeFile);
       case PLATFORMS.MAC:
-        return await this.getMacOllamaExecutablePath();
+        return this.getMacOllamaExecutablePath();
       case PLATFORMS.LINUX:
         const linuxFile = files.find((file) =>
           file.toLowerCase().endsWith('.tar.gz'),
@@ -458,53 +467,48 @@ export default class LLMServices {
   }
 
   private static async startOllamaOnMac(): Promise<boolean> {
-    if (await this.isOllamaRunning()) {
-      console.info('Ollama is already running');
-      return true;
-    }
-
     const ollamaExecutable = await this.getOllamaExecutablePath();
-
     if (!ollamaExecutable) {
       console.error('No Ollama executable found');
       return false;
     }
 
-    return new Promise((resolve, reject) => {
-      this.ollamaProcess = spawn(ollamaExecutable, ['serve'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          OLLAMA_HOST: this.host,
-          OLLAMA_MODELS: this.ollamaPath,
-        },
-        detached: false,
-      });
+    if (await this.isOllamaRunning()) {
+      console.info('Ollama is already running');
+      return true;
+    }
 
-      // Handle process events
-      this.ollamaProcess.on('error', (error) => {
-        console.error('Ollama process error:', error);
-      });
-
-      this.ollamaProcess.on('exit', (code, signal) => {
-        console.log(
-          `Ollama process exited with code ${code} and signal ${signal}`,
-        );
-        this.ollamaProcess = null;
-      });
-
-      // Wait for Ollama to start
-      this.waitForPing()
-        .then(() => {
-          resolve(true);
-        })
-        .catch((pingError) => {
-          if (this.ollamaProcess && !this.ollamaProcess.killed) {
-            this.ollamaProcess.kill();
-          }
-          reject(pingError);
-        });
+    console.info('Starting Ollama on Mac...');
+    this.ollamaProcess = spawn(ollamaExecutable, ['serve'], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        OLLAMA_HOST: this.host,
+        OLLAMA_MODELS: this.ollamaPath,
+      },
+      detached: false,
     });
+
+    // Handle process events
+    this.ollamaProcess.on('error', (error) => {
+      console.error('Ollama process error:', error);
+    });
+
+    this.ollamaProcess.on('exit', (code, signal) => {
+      console.log(
+        `Ollama process exited with code ${code} and signal ${signal}`,
+      );
+      this.ollamaProcess = null;
+    });
+
+    try {
+      await this.waitForPing();
+      console.info('Ollama started successfully on Mac');
+      return true;
+    } catch (error) {
+      console.error('Ollama startup failed:', error);
+      return false;
+    }
   }
 
   private static async getMacOllamaExecutablePath(): Promise<string | null> {
@@ -631,11 +635,12 @@ export default class LLMServices {
       });
 
       // Wait for Ollama to start and be ready
-      this.waitForPing(2000, 15) // Increased retries and delay for Windows
+      this.waitForPing(2000, 15)
         .then(() => {
           clearTimeout(startupTimeout);
           console.info('Ollama started successfully on Windows');
           resolve(true);
+          return true;
         })
         .catch((pingError) => {
           clearTimeout(startupTimeout);
@@ -648,6 +653,7 @@ export default class LLMServices {
             this.ollamaProcess.kill('SIGTERM');
           }
           reject(pingError);
+          return false;
         });
     });
   }
@@ -657,12 +663,14 @@ export default class LLMServices {
   }
 
   private static async waitForPing(delay = 1000, retries = 5): Promise<void> {
-    for (let i = 0; i < retries; i++) {
+    for (let i = 0; i < retries; i += 1) {
       if (await this.isOllamaRunning()) {
         return;
       }
       console.info('waiting for ollama server...');
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise((resolve) => {
+        setTimeout(resolve, delay);
+      });
     }
     console.error("max retries reached. Ollama server didn't respond.");
     throw new Error("Max retries reached. Ollama server didn't respond.");
@@ -794,10 +802,22 @@ export default class LLMServices {
   }> {
     try {
       if (!(await this.isOllamaRunning())) {
-        return {
-          success: false,
-          error: 'Ollama is not running. Please start Ollama first.',
-        };
+        console.info('Ollama is not running. Starting it...');
+        let started = false;
+        let error = null;
+        try {
+          this.setOllamaPath();
+          started = await this.maybeStartOllama();
+        } catch (err) {
+          console.error('Failed to start Ollama:', err);
+          error = err;
+        }
+        if (!started) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          };
+        }
       }
 
       const list = await this.ollamaClient.list();
@@ -814,7 +834,7 @@ export default class LLMServices {
 
       const response = await this.ollamaClient.embed({
         model: CONFIG_MODELS.EMBEDDING_MODEL,
-        input: input,
+        input,
       });
 
       return { success: true, embeddings: response.embeddings };

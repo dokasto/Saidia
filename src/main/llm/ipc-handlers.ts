@@ -4,7 +4,6 @@ import { LLM_EVENTS } from '../../constants/events';
 import { QuestionType, QuestionDifficulty } from '../../types/Question';
 import { generateQuestions } from './question-generation';
 
-// Define the interface inline to avoid import issues
 interface GenerateQuestionOptions {
   count: number;
   difficulty: QuestionDifficulty;
@@ -33,7 +32,7 @@ export default function setupLLMIPCHandlers() {
   ipcMain.handle(
     LLM_EVENTS.GENERATE_QUESTIONS,
     async (event, subjectId: string, options: GenerateQuestionOptions) => {
-      return await generateQuestions(subjectId, options);
+      return generateQuestions(subjectId, options);
     },
   );
 

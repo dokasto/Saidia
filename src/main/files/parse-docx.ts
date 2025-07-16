@@ -1,9 +1,14 @@
+import * as fs from 'fs';
+import { promisify } from 'util';
 import mammoth from 'mammoth';
 import { removeCitations, removeHyperlinks } from './clean';
 import extractSectionsAndContent, { Section } from './parse-html';
 
-export default async function parseDocx(docx: Buffer): Promise<Section[]> {
-  let doc = await mammoth.convertToHtml({ buffer: docx });
+const readFile = promisify(fs.readFile);
+
+export default async function parseDocx(filePath: string): Promise<Section[]> {
+  const docx = await readFile(filePath);
+  const doc = await mammoth.convertToHtml({ buffer: docx });
 
   if (!doc.value) {
     return [];

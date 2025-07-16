@@ -1,25 +1,17 @@
-const odt2html = require('odt2html');
-
-import { Section } from './parse-html';
 import { removeCitations, removeHyperlinks } from './clean';
-import extractSectionsAndContent from './parse-html';
+import extractSectionsAndContent, { Section } from './parse-html';
+
+const odt2html = require('odt2html');
 
 export default async function parseOdt(
   odtFilePath: string,
 ): Promise<Section[]> {
-  try {
-    let html = await odt2html.toHTML({ path: odtFilePath });
+  let html = await odt2html.toHTML({ path: odtFilePath });
 
-    if (!html || !html.value) {
-      return [];
-    }
+  if (html == null) return [];
 
-    html = removeCitations(html);
-    html = removeHyperlinks(html);
+  html = removeCitations(html);
+  html = removeHyperlinks(html);
 
-    return extractSectionsAndContent(html);
-  } catch (err) {
-    console.error('Error parsing ODT file:', err);
-    return [];
-  }
+  return extractSectionsAndContent(html);
 }

@@ -1,8 +1,9 @@
-import { ipcMain } from 'electron';
-import FileManager from './file-manager';
-import { DOWNLOAD_EVENTS } from '../../constants/events';
-import { app } from 'electron';
+import { ipcMain, app } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
+import download from './dowload';
+import { removeFile } from './manager';
+import { DOWNLOAD_EVENTS } from '../../constants/events';
 
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -22,18 +23,13 @@ export default function setupDownloadIPCHandlers() {
           : path.join(app.getPath('userData'), 'downloads');
 
         // Ensure directory exists
-        const fs = require('fs');
         if (!fs.existsSync(downloadsPath)) {
           fs.mkdirSync(downloadsPath, { recursive: true });
         }
 
-        const results = await FileManager.downloadFiles(
-          urls,
-          downloadsPath,
-          (progress) => {
-            event.sender.send(DOWNLOAD_EVENTS.PROGRESS, progress);
-          },
-        );
+        const results = await download(urls, downloadsPath, (progress) => {
+          event.sender.send(DOWNLOAD_EVENTS.PROGRESS, progress);
+        });
 
         return { success: true, data: results };
       } catch (error) {
@@ -42,10 +38,9 @@ export default function setupDownloadIPCHandlers() {
     },
   );
 
-  ipcMain.handle(DOWNLOAD_EVENTS.GET_DOWNLOADED_FILES, async (event) => {
+  ipcMain.handle(DOWNLOAD_EVENTS.GET_DOWNLOADED_FILES, async (_event) => {
     try {
       const downloadsPath = path.join(app.getPath('userData'), 'downloads');
-      const fs = require('fs');
 
       if (!fs.existsSync(downloadsPath)) {
         return { success: true, data: [] };
@@ -73,12 +68,12 @@ export default function setupDownloadIPCHandlers() {
 
   ipcMain.handle(
     DOWNLOAD_EVENTS.DELETE_DOWNLOADED_FILE,
-    async (event, filename: string) => {
+    async (_event, filename: string) => {
       try {
         const downloadsPath = path.join(app.getPath('userData'), 'downloads');
         const filePath = path.join(downloadsPath, filename);
 
-        await FileManager.deleteFile(filePath);
+        await removeFile(filePath);
         return { success: true };
       } catch (error) {
         return { success: false, error: handleError(error) };
@@ -86,7 +81,7 @@ export default function setupDownloadIPCHandlers() {
     },
   );
 
-  ipcMain.handle(DOWNLOAD_EVENTS.GET_DOWNLOADS_PATH, async (event) => {
+  ipcMain.handle(DOWNLOAD_EVENTS.GET_DOWNLOADS_PATH, async (_event) => {
     try {
       const downloadsPath = path.join(app.getPath('userData'), 'downloads');
       return { success: true, data: downloadsPath };
