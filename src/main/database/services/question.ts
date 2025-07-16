@@ -1,16 +1,16 @@
-import { Question as QuestionModel } from '../models';
+import crypto from 'crypto';
+import QuestionModel from '../models/Question';
 import {
-  QuestionDifficulty,
-  QuestionType,
+  TQuestionDifficulty,
+  TQuestionType,
   TQuestion,
 } from '../../../types/Question';
-import crypto from 'crypto';
 
 export default class QuestionService {
   static async createQuestion(
     subject_id: string,
-    difficulty: QuestionDifficulty,
-    type: QuestionType,
+    difficulty: TQuestionDifficulty,
+    type: TQuestionType,
     title: string,
     options?: string[],
     answer?: number,
@@ -61,8 +61,8 @@ export default class QuestionService {
   static async updateQuestion(
     question_id: string,
     updates: Partial<{
-      difficulty: QuestionDifficulty;
-      type: QuestionType;
+      difficulty: TQuestionDifficulty;
+      type: TQuestionType;
       title: string;
       options?: string[];
       answer?: number;
@@ -81,7 +81,7 @@ export default class QuestionService {
 
   static async getQuestions(
     subject_id?: string,
-    difficulty?: QuestionDifficulty,
+    difficulty?: TQuestionDifficulty,
   ): Promise<TQuestion[]> {
     const where: any = {};
     if (subject_id) where.subject_id = subject_id;

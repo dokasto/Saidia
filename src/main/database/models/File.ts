@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import Connection from '../connection';
-import { Subject } from './Subject';
+import Subject from './Subject';
 
 interface FileAttributes {
   file_id: string;
@@ -11,13 +11,16 @@ interface FileAttributes {
 
 interface FileCreationAttributes extends Optional<FileAttributes, never> {}
 
-export class File
+export default class File
   extends Model<FileAttributes, FileCreationAttributes>
   implements FileAttributes
 {
   public file_id!: string;
+
   public subject_id!: string;
+
   public filename!: string;
+
   public filepath!: string;
 
   // Associations

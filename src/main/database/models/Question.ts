@@ -1,13 +1,14 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import Connection from '../connection';
-import { QuestionDifficulty, QuestionType } from '../../../types/Question';
-import { Subject } from './Subject';
+import { TQuestionDifficulty, TQuestionType } from '../../../types/Question';
+import Subject from './Subject';
+import { QuestionDifficulty, QuestionType } from '../../../constants/misc';
 
 interface QuestionAttributes {
   question_id: string;
   subject_id: string;
-  difficulty: QuestionDifficulty;
-  type: QuestionType;
+  difficulty: TQuestionDifficulty;
+  type: TQuestionType;
   title: string;
   options?: string;
   answer?: number;
@@ -17,17 +18,24 @@ interface QuestionAttributes {
 interface QuestionCreationAttributes
   extends Optional<QuestionAttributes, 'created_at' | 'options' | 'answer'> {}
 
-export class Question
+export default class Question
   extends Model<QuestionAttributes, QuestionCreationAttributes>
   implements QuestionAttributes
 {
   public question_id!: string;
+
   public subject_id!: string;
-  public difficulty!: QuestionDifficulty;
-  public type!: QuestionType;
+
+  public difficulty!: TQuestionDifficulty;
+
+  public type!: TQuestionType;
+
   public title!: string;
+
   public options?: string;
+
   public answer?: number;
+
   public created_at!: Date;
 
   // Associations

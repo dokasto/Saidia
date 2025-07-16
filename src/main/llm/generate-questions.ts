@@ -3,7 +3,7 @@
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { CONFIG_MODELS } from '../../constants/misc';
 import { GenerateQuestionOptions } from '../../types/Question';
-import { Embedding } from '../database/models';
+import Embedding from '../database/models/Embedding';
 import SubjectService from '../database/services/subject';
 import { renderLog } from '../util';
 import LLMService from './services';

@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import Connection from '../connection';
-import { File } from './File';
-import { Question } from './Question';
+import File from './File';
+import Question from './Question';
 
 interface SubjectAttributes {
   subject_id: string;
@@ -11,15 +11,17 @@ interface SubjectAttributes {
 interface SubjectCreationAttributes
   extends Optional<SubjectAttributes, never> {}
 
-export class Subject
+export default class Subject
   extends Model<SubjectAttributes, SubjectCreationAttributes>
   implements SubjectAttributes
 {
   public subject_id!: string;
+
   public name!: string;
 
   // Associations
   public readonly files?: File[];
+
   public readonly questions?: Question[];
 }
 

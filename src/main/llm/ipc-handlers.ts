@@ -1,14 +1,8 @@
 import { ipcMain } from 'electron';
 import LLMService from './services';
 import { LLM_EVENTS } from '../../constants/events';
-import { QuestionType, QuestionDifficulty } from '../../types/Question';
-import { generateQuestions } from './question-generation';
-
-interface GenerateQuestionOptions {
-  count: number;
-  difficulty: QuestionDifficulty;
-  type: QuestionType;
-}
+import { GenerateQuestionOptions } from '../../types/Question';
+import generateQuestions from './generate-questions';
 
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {

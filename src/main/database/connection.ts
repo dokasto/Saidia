@@ -1,14 +1,16 @@
+/* eslint-disable no-console */
 import { Sequelize } from 'sequelize';
 import * as sqliteVec from 'sqlite-vec';
 import Database, { Database as DatabaseType } from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
-import { ensureDirectory } from '../util';
 import * as fs from 'fs';
 
 class Connection {
   vectorDbInstance: DatabaseType;
+
   sequelizeInstance: Sequelize;
+
   private initialized: boolean = false;
 
   constructor() {
@@ -19,7 +21,7 @@ class Connection {
       'database.db',
     );
 
-    this.ensureDBDirectory(dbPath);
+    Connection.ensureDBDirectory(dbPath);
 
     this.vectorDbInstance = new Database(dbPath);
 
@@ -41,8 +43,8 @@ class Connection {
       // Load the SQLite extension using the correct path
       try {
         this.vectorDbInstance.loadExtension(extensionPath);
-      } catch (error) {
-        console.error('Failed to load extension 3rd try ', error);
+      } catch (err) {
+        console.error('Failed to load extension 3rd try ', err);
         extensionPath = path.join(
           app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
           'node_modules/sqlite-vec/node_modules/sqlite-vec-darwin-arm64/vec0',
@@ -53,9 +55,9 @@ class Connection {
         // Load the SQLite extension using the correct path
         try {
           this.vectorDbInstance.loadExtension(extensionPath);
-        } catch (error) {
-          console.error('Failed to load SQLite extension 3rd try ', error);
-          throw error;
+        } catch (e) {
+          console.error('Failed to load SQLite extension 3rd try ', e);
+          throw e;
         }
       }
     }
@@ -120,7 +122,7 @@ class Connection {
     return this.initialized;
   }
 
-  private ensureDBDirectory(dirPath: string): void {
+  private static ensureDBDirectory(dirPath: string): void {
     const fullDirPath = path.dirname(dirPath);
     if (!fs.existsSync(fullDirPath)) {
       try {

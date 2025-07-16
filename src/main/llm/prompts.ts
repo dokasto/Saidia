@@ -1,12 +1,6 @@
-import { QuestionType, QuestionDifficulty } from '../../types/Question';
 import { z } from 'zod';
-
-// Define the interface inline to avoid import issues
-interface GenerateQuestionOptions {
-  count: number;
-  difficulty: QuestionDifficulty;
-  type: QuestionType;
-}
+import { QuestionType } from '../../constants/misc';
+import { GenerateQuestionOptions } from '../../types/Question';
 
 // Define Zod schemas for question types
 export const QuestionSchema = z.object({

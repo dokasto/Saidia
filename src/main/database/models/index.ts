@@ -1,7 +1,7 @@
-import { Subject } from './Subject';
-import { File } from './File';
-import { Question } from './Question';
-import { Embedding } from './Embedding';
+import Subject from './Subject';
+import File from './File';
+import Question from './Question';
+import Embedding from './Embedding';
 
 Subject.hasMany(File, { foreignKey: 'subject_id', as: 'files' });
 File.belongsTo(Subject, { foreignKey: 'subject_id', as: 'subject' });

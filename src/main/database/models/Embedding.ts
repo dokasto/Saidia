@@ -1,8 +1,9 @@
+/* eslint-disable default-param-last */
+import crypto from 'crypto';
 import Connection from '../connection';
 import { TEmbedding } from '../../../types/Embedding';
-import crypto from 'crypto';
 
-export class Embedding {
+export default class Embedding {
   static insertEmbedding(
     subject_id: string,
     file_id: string,
@@ -29,7 +30,7 @@ export class Embedding {
 
   static searchSimilar(
     queryEmbedding: number[],
-    limit: number | null = 10,
+    limit: number,
     subject_id?: string,
   ): TEmbedding[] {
     const embeddingFloat32 = new Float32Array(queryEmbedding);

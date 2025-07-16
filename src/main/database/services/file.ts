@@ -1,5 +1,5 @@
 import { FileResponse } from '../../../types/File';
-import { File } from '../models';
+import File from '../models/File';
 
 export default class FileService {
   static async createFile(

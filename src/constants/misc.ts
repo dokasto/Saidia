@@ -45,3 +45,15 @@ export const CONFIG_MODELS = {
   QUESTION_GENERATION_MODEL: MODELS.GEMMA3_4B, // Todo: change to GEMMA_3N_E4B_IT_FP16 for production
   VISION_MODEL: MODELS.GEMMA3_4B, // Todo: change to GEMMA_3_12B_IT_QAT for production
 } as const;
+
+export const QuestionDifficulty = {
+  EASY: 'easy',
+  MEDIUM: 'medium',
+  HARD: 'hard',
+} as const;
+
+export const QuestionType = {
+  MULTIPLE_CHOICE: 'multiple_choice',
+  TRUE_FALSE: 'true_false',
+  FILL_IN_THE_BLANK: 'fill_in_the_blank',
+} as const;

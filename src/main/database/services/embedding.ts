@@ -13,7 +13,7 @@ export default class EmbeddingService {
 
   static async searchSimilar(
     queryEmbedding: number[],
-    limit: number = 10,
+    limit: number,
     subject_id?: string,
   ): Promise<TEmbedding[]> {
     return EmbeddingModel.searchSimilar(queryEmbedding, limit, subject_id);
