@@ -4,7 +4,7 @@ import '@mantine/core/styles.css';
 import './App.css';
 import { createTheme, MantineProvider } from '@mantine/core';
 import Dashboard from './components/Dashboard';
-import SubjectProvider from './subjects/subjectProvider';
+import SubjectProvider from './providers/subjectProvider';
 
 const theme = createTheme({
   fontFamily: 'Nunito, sans-serif',
