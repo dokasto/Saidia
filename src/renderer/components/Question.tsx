@@ -1,4 +1,5 @@
 import { TSubject } from '../../types';
+import React from 'react';
 
 type Props = {
   subject: TSubject;
