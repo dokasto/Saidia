@@ -17,6 +17,7 @@ module.exports = {
     '@stylexjs/no-unused': 'error',
     '@stylexjs/valid-shorthands': 'warn',
     '@stylexjs/sort-keys': 'warn',
+    camelcase: 'off',
   },
   parserOptions: {
     ecmaVersion: 2022,
