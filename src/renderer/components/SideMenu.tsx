@@ -19,7 +19,7 @@ import {
 } from '@tabler/icons-react';
 import { SUBJECT_EVENTS } from '../../constants/events';
 import { Subject } from '../../main/database/models';
-import { SubjectContext } from '../subjects/subjectProvider';
+import { SubjectContext } from '../providers/subjectProvider';
 
 export default function SideMenu() {
   const { create, changeName, remove, selected, subjects, getAll, select } =

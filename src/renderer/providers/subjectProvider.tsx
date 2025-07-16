@@ -5,6 +5,7 @@ import React, {
   useState,
   useMemo,
   useEffect,
+  useRef,
 } from 'react';
 import { TSubject } from '../../types';
 import { SUBJECT_EVENTS } from '../../constants/events';
@@ -36,6 +37,7 @@ export const SubjectContext = createContext<SubjectContextType>({
 export default function SubjectProvider({ children }: Props) {
   const [subjects, setSubjects] = useState<TSubject[]>([]);
   const [selected, setSelected] = useState<TSubject | null>(null);
+  const hasListedSubjects = useRef(false);
 
   const getAll = useCallback(async (): Promise<TSubject[]> => {
     const response = await window.electron.ipcRenderer.invoke(
@@ -44,6 +46,9 @@ export default function SubjectProvider({ children }: Props) {
 
     if (response.success && response.data) {
       setSubjects(response.data);
+      if (selected == null) {
+        setSelected(response.data[0]);
+      }
     }
     return response.data;
   }, []);
@@ -97,6 +102,10 @@ export default function SubjectProvider({ children }: Props) {
   );
 
   useEffect(() => {
+    if (hasListedSubjects.current) {
+      return;
+    }
+    hasListedSubjects.current = true;
     getAll();
   }, []);
 
