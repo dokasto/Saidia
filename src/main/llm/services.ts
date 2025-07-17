@@ -796,6 +796,7 @@ export default class LLMServices {
           percentage: 100,
           status: `model ${modelName} downloaded successfully`,
         });
+        console.info(`model ${modelName} downloaded successfully`);
         break;
       }
     }
