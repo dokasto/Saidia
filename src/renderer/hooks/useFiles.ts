@@ -3,7 +3,7 @@ import { DIALOG_EVENTS, FILE_SYSTEM_EVENTS } from '../../constants/events';
 import { FILE_EXTENSIONS } from '../../constants/misc';
 
 export default function useFiles(subjectId: string | null) {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState<string[]>([]);
 
   async function add() {
     const options = {

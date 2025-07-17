@@ -1,9 +1,8 @@
-import { Stack, Button, Group, Badge } from '@mantine/core';
+import { Stack, Button, Group, Badge, ScrollArea } from '@mantine/core';
 import { IconUpload } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { TSubject } from '../../types';
 import useFiles from '../hooks/useFiles';
-import { SubjectContext } from '../providers/subjectProvider';
 
 type Props = {
   subject: TSubject;
@@ -28,7 +27,7 @@ export default function File({ subject }: Props) {
     } else {
       alert('Error!');
     }
-  }, [getAll]);
+  }, [getAll, add]);
 
   return (
     <div>
@@ -53,21 +52,28 @@ export default function File({ subject }: Props) {
           Upload files for this subject
         </Button>
 
-        <Group gap="sm" wrap="wrap">
-          {files.map((filePath, index) => {
-            return (
-              <Badge
-                key={index}
-                color="gray"
-                variant="light"
-                radius="xl"
-                size="lg"
-              >
-                📄 {filePath}
-              </Badge>
-            );
-          })}
-        </Group>
+        <ScrollArea
+          style={{ width: '100%', height: 20 }}
+          type="auto"
+          scrollbarSize={6}
+        >
+          <Group gap="sm" wrap="wrap">
+            {files.map((filePath, index) => {
+              const fileName = filePath.split(/[/\\]/).pop();
+              return (
+                <Badge
+                  key={index}
+                  color="gray"
+                  variant="light"
+                  radius="xl"
+                  size="lg"
+                >
+                  📄 {fileName}
+                </Badge>
+              );
+            })}
+          </Group>
+        </ScrollArea>
       </Stack>
     </div>
   );

@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
+import { notifications } from '@mantine/notifications';
 import { TSubject } from '../../types';
 import { SUBJECT_EVENTS } from '../../constants/events';
 

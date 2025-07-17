@@ -3,6 +3,7 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import '@mantine/core/styles.css';
 import './App.css';
 import { createTheme, MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import Dashboard from './components/Dashboard';
 import SubjectProvider from './providers/subjectProvider';
 import SplashScreen from './components/SplashScreen';
@@ -18,6 +19,7 @@ export default function App() {
 
   return (
     <MantineProvider theme={theme}>
+      <Notifications position="top-right" />
       <SubjectProvider>
         <Router>
           <Routes>
