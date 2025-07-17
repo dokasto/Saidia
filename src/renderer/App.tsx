@@ -5,7 +5,6 @@ import './App.css';
 import { createTheme, MantineProvider } from '@mantine/core';
 import Dashboard from './components/Dashboard';
 import SubjectProvider from './providers/subjectProvider';
-import SplashScreen from './components/SplashScreen';
 
 const theme = createTheme({
   fontFamily: 'Nunito, sans-serif',
@@ -17,7 +16,7 @@ export default function App() {
       <SubjectProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<SplashScreen />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </Router>
