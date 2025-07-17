@@ -22,7 +22,7 @@ export const FILE_EVENTS = {
 
 // Question Events
 export const QUESTION_EVENTS = {
-  CREATE: 'db:createQuestion',
+  SAVE_QUESTIONS: 'db:saveQuestions',
   GET_ALL: 'db:getQuestions',
   GET_ONE: 'db:getQuestion',
   UPDATE: 'db:updateQuestion',

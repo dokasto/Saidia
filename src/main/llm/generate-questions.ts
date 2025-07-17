@@ -1,29 +1,32 @@
 /* eslint-disable no-console */
 /* eslint-disable no-use-before-define */
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { CONFIG_MODELS } from '../../constants/misc';
-import { GenerateQuestionOptions } from '../../types/Question';
+import {
+  GenerateQuestionOptions,
+  TGeneratedQuestion,
+} from '../../types/Question';
 import Embedding from '../database/models/Embedding';
 import SubjectService from '../database/services/subject';
 import { renderLog } from '../util';
 import LLMService from './services';
 import { generatePromptAndSchema } from './prompts';
 import { TEmbedding } from '../../types/Embedding';
+import { IPCResponse } from '../../types';
 
 export default async function generateQuestions(
   subjectId: string,
   options: GenerateQuestionOptions,
-) {
+): Promise<IPCResponse<TGeneratedQuestion[]>> {
   const limit = 1000; // 1 million just to get all results
   try {
     const subject = await SubjectService.getSubject(subjectId);
     if (subject == null) {
-      return { success: false, error: 'Subject not found', data: null };
+      return { success: false, error: 'Subject not found' };
     }
 
     const embeddings = await createEmbeddings(subject.name);
     if (embeddings == null) {
-      return { success: false, error: 'Embedding not found', data: null };
+      return { success: false, error: 'Embedding not found' };
     }
 
     const relevantChunks = Embedding.searchSimilar(
@@ -62,7 +65,10 @@ export default async function generateQuestions(
   } catch (error) {
     console.log('Error in generateQuestions:', error);
     renderLog('Error in generateQuestions:', error);
-    return { success: false, error, data: null };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 

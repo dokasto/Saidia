@@ -6,30 +6,30 @@ import {
   DeleteQuestionResponse,
   TQuestion,
   UpdateQuestionResponse,
+  TGeneratedQuestion,
+  TQuestionDifficulty,
+  TQuestionType,
+  QuestionUpdateData,
 } from '../../../types/Question';
 
 export default function setupQuestionHandlers() {
   ipcMain.handle(
-    QUESTION_EVENTS.CREATE,
+    QUESTION_EVENTS.SAVE_QUESTIONS,
     async (
       _event,
-      subject_id: string,
-      difficulty: string,
-      type: string,
-      title: string,
-      options?: string[],
-      answer?: number,
-    ): Promise<IPCResponse<TQuestion>> => {
+      subjectId: string,
+      questions: TGeneratedQuestion[],
+      difficulty: TQuestionDifficulty,
+      type: TQuestionType,
+    ): Promise<IPCResponse> => {
       try {
-        const question = await QuestionService.createQuestion(
-          subject_id,
-          difficulty as any,
-          type as any,
-          title,
-          options,
-          answer,
+        await QuestionService.saveQuestions(
+          subjectId,
+          questions,
+          difficulty,
+          type,
         );
-        return { success: true, data: question };
+        return { success: true };
       } catch (error) {
         return {
           success: false,
@@ -43,13 +43,21 @@ export default function setupQuestionHandlers() {
     QUESTION_EVENTS.GET_ALL,
     async (
       _event,
-      subject_id?: string,
-      difficulty?: string,
+      {
+        subjectId,
+        difficulty,
+        type,
+      }: {
+        subjectId?: string;
+        difficulty?: TQuestionDifficulty;
+        type?: TQuestionType;
+      } = {},
     ): Promise<IPCResponse<TQuestion[]>> => {
       try {
         const questions = await QuestionService.getQuestions(
-          subject_id,
-          difficulty as any,
+          subjectId,
+          difficulty,
+          type,
         );
         return { success: true, data: questions };
       } catch (error) {
@@ -84,7 +92,7 @@ export default function setupQuestionHandlers() {
     async (
       _event,
       question_id: string,
-      updates: any,
+      updates: QuestionUpdateData,
     ): Promise<IPCResponse<UpdateQuestionResponse>> => {
       try {
         const result = await QuestionService.updateQuestion(

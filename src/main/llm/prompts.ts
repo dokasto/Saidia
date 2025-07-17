@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { QuestionType } from '../../constants/misc';
 import { GenerateQuestionOptions } from '../../types/Question';
 
-// Define Zod schemas for question types
 export const QuestionSchema = z.object({
   question: z.string().describe('The question text'),
   choices: z.array(z.string()).describe('Array of choice options'),

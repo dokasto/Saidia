@@ -29,3 +29,17 @@ export interface GenerateQuestionOptions {
   difficulty: TQuestionDifficulty;
   type: TQuestionType;
 }
+
+export interface TGeneratedQuestion {
+  question: string;
+  choices: string[];
+  answer?: number;
+}
+
+export type QuestionUpdateData = Partial<{
+  difficulty: TQuestionDifficulty;
+  type: TQuestionType;
+  title: string;
+  options?: string[];
+  answer?: number;
+}>;

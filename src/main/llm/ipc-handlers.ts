@@ -1,8 +1,12 @@
 import { ipcMain } from 'electron';
 import LLMService from './services';
 import { LLM_EVENTS } from '../../constants/events';
-import { GenerateQuestionOptions } from '../../types/Question';
+import {
+  GenerateQuestionOptions,
+  TGeneratedQuestion,
+} from '../../types/Question';
 import generateQuestions from './generate-questions';
+import { IPCResponse } from '../../types';
 
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {
@@ -25,7 +29,11 @@ export default function setupLLMIPCHandlers() {
 
   ipcMain.handle(
     LLM_EVENTS.GENERATE_QUESTIONS,
-    async (event, subjectId: string, options: GenerateQuestionOptions) => {
+    async (
+      event,
+      subjectId: string,
+      options: GenerateQuestionOptions,
+    ): Promise<IPCResponse<TGeneratedQuestion[]>> => {
       return generateQuestions(subjectId, options);
     },
   );

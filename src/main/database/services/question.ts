@@ -4,32 +4,36 @@ import {
   TQuestionDifficulty,
   TQuestionType,
   TQuestion,
+  TGeneratedQuestion,
+  QuestionUpdateData,
 } from '../../../types/Question';
 
 export default class QuestionService {
-  static async createQuestion(
+  static async saveQuestions(
     subject_id: string,
+    questions: TGeneratedQuestion[],
     difficulty: TQuestionDifficulty,
     type: TQuestionType,
-    title: string,
-    options?: string[],
-    answer?: number,
-  ): Promise<TQuestion> {
-    const question = await QuestionModel.create({
-      question_id: crypto.randomUUID(),
-      subject_id,
-      difficulty,
-      type,
-      title,
-      options: options ? JSON.stringify(options) : undefined,
-      answer,
-    });
+  ): Promise<TQuestion[]> {
+    const createdQuestions = await QuestionModel.bulkCreate(
+      questions.map((q) => ({
+        question_id: crypto.randomUUID(),
+        subject_id,
+        difficulty,
+        type,
+        title: q.question,
+        options: q.choices ? JSON.stringify(q.choices) : undefined,
+        answer: q.answer,
+      })),
+    );
 
-    const json = question.toJSON();
-    return {
-      ...json,
-      options: json.options ? JSON.parse(json.options) : undefined,
-    };
+    return createdQuestions.map((question) => {
+      const json = question.toJSON();
+      return {
+        ...json,
+        options: json.options ? JSON.parse(json.options) : undefined,
+      };
+    });
   }
 
   static async findQuestionsBySubject(
@@ -60,13 +64,7 @@ export default class QuestionService {
 
   static async updateQuestion(
     question_id: string,
-    updates: Partial<{
-      difficulty: TQuestionDifficulty;
-      type: TQuestionType;
-      title: string;
-      options?: string[];
-      answer?: number;
-    }>,
+    updates: QuestionUpdateData,
   ): Promise<boolean> {
     const updateData: any = { ...updates };
     if (updates.options) {
@@ -82,10 +80,12 @@ export default class QuestionService {
   static async getQuestions(
     subject_id?: string,
     difficulty?: TQuestionDifficulty,
+    type?: TQuestionType,
   ): Promise<TQuestion[]> {
     const where: any = {};
     if (subject_id) where.subject_id = subject_id;
     if (difficulty) where.difficulty = difficulty;
+    if (type) where.type = type;
 
     const questions = await QuestionModel.findAll({ where });
     return questions.map((question) => {
