@@ -71,8 +71,6 @@ export default class LLMServices {
         onProgress,
       );
 
-      // TODO: Download larger models in the background
-
       onProgress?.({
         status: 'LLM Service Initialization Complete',
         completed: true,
@@ -86,6 +84,9 @@ export default class LLMServices {
         completed: true,
       });
       console.error('=== LLM Service Initialization Failed ===', error);
+    } finally {
+      //  download larger models in the background
+      this.downloadModels([MODELS.GEMMA_3N_E4B_IT_FP16]);
     }
   }
 
@@ -112,6 +113,18 @@ export default class LLMServices {
       default:
         throw new Error(`Unsupported platform: ${platform} ${arch}`);
     }
+  }
+
+  static async recommendModelForQuestionGeneration(): Promise<string> {
+    if (!(await this.maybeStartOllama())) {
+      throw new Error('Ollama is not running');
+    }
+
+    return (await this.ollamaClient.list()).models.some((model: any) =>
+      model.name.includes(MODELS.GEMMA_3N_E4B_IT_FP16),
+    )
+      ? MODELS.GEMMA_3N_E4B_IT_FP16
+      : MODELS.GEMMA3N_E2B_IT_Q4_K_M;
   }
 
   static async isOllamaDownloaded(): Promise<boolean> {

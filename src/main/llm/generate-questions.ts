@@ -83,7 +83,7 @@ async function generateQuestionsFromChunks(
 
     // Use Ollama structured output with proper format parameter
     let response = await LLMService.generate({
-      model: CONFIG_MODELS.QUESTION_GENERATION_MODEL,
+      model: await LLMService.recommendModelForQuestionGeneration(),
       prompt,
       stream: false,
       format: zodToJsonSchema(zodSchema),
@@ -94,7 +94,7 @@ async function generateQuestionsFromChunks(
       renderLog('Structured output failed, trying regular output...');
 
       response = await LLMService.generate({
-        model: CONFIG_MODELS.QUESTION_GENERATION_MODEL,
+        model: await LLMService.recommendModelForQuestionGeneration(),
         prompt,
         stream: false,
       });
