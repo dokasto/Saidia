@@ -19,7 +19,7 @@ export default function setupLLMIPCHandlers() {
   ipcMain.handle(LLM_EVENTS.INIT, async (event) => {
     try {
       await LLMService.init((progress) => {
-        event.sender.send(LLM_EVENTS.PROGRESS, progress);
+        event.sender.send(LLM_EVENTS.INITIALISATION_PROGRESS, progress);
       });
       return { success: true };
     } catch (error) {

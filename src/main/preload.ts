@@ -1,13 +1,8 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import {
-  DIALOG_EVENTS,
-  DOWNLOAD_EVENTS,
-  LLM_EVENTS,
-} from '../constants/events';
-import { FILE_EXTENSIONS } from '../constants/misc';
-import { LLMServiceProgress } from './llm/services';
+import { LLM_EVENTS } from '../constants/events';
+import { LLMInitialisationProgress } from './llm/services';
 
 export type Channels = 'ipc-example';
 
@@ -35,76 +30,25 @@ const electronHandler = {
       ipcRenderer.removeAllListeners(channel);
     },
   },
-  dialog: {
-    showOpenDialog: () => {
-      return ipcRenderer.invoke(DIALOG_EVENTS.SHOW_OPEN_DIALOG, {
-        title: 'Select a document',
-        properties: ['openFile'],
-        filters: [
-          {
-            name: 'Documents',
-            extensions: FILE_EXTENSIONS,
-          },
-        ],
-      });
-    },
-  },
-  download: {
-    downloadFiles: (urls: string[], folderName?: string) => {
-      return ipcRenderer.invoke(
-        DOWNLOAD_EVENTS.DOWNLOAD_FILES,
-        urls,
-        folderName,
-      );
-    },
-    getDownloadedFiles: () => {
-      return ipcRenderer.invoke(DOWNLOAD_EVENTS.GET_DOWNLOADED_FILES);
-    },
-    deleteDownloadedFile: (filename: string) => {
-      return ipcRenderer.invoke(
-        DOWNLOAD_EVENTS.DELETE_DOWNLOADED_FILE,
-        filename,
-      );
-    },
-    getDownloadsPath: () => {
-      return ipcRenderer.invoke(DOWNLOAD_EVENTS.GET_DOWNLOADS_PATH);
-    },
-    onProgress: (callback: (progress: any) => void) => {
-      const subscription = (_event: IpcRendererEvent, progress: any) =>
-        callback(progress);
-      ipcRenderer.on(DOWNLOAD_EVENTS.PROGRESS, subscription);
-
-      return () => {
-        ipcRenderer.removeListener(DOWNLOAD_EVENTS.PROGRESS, subscription);
-      };
-    },
-  },
   llm: {
-    init: () => {
+    initialise: () => {
       return ipcRenderer.invoke(LLM_EVENTS.INIT);
     },
 
-    generateQuestions: (subjectId: string, options: any) => {
-      return ipcRenderer.invoke(
-        LLM_EVENTS.GENERATE_QUESTIONS,
-        subjectId,
-        options,
-      );
-    },
-
-    generate: (prompt: string) => {
-      return ipcRenderer.invoke(LLM_EVENTS.GENERATE, prompt);
-    },
-
-    onProgress: (callback: (progress: LLMServiceProgress) => void) => {
+    onInitialisationProgress: (
+      callback: (progress: LLMInitialisationProgress) => void,
+    ) => {
       const subscription = (
         _event: IpcRendererEvent,
-        progress: LLMServiceProgress,
+        progress: LLMInitialisationProgress,
       ) => callback(progress);
-      ipcRenderer.on(LLM_EVENTS.PROGRESS, subscription);
+      ipcRenderer.on(LLM_EVENTS.INITIALISATION_PROGRESS, subscription);
 
       return () => {
-        ipcRenderer.removeListener(LLM_EVENTS.PROGRESS, subscription);
+        ipcRenderer.removeListener(
+          LLM_EVENTS.INITIALISATION_PROGRESS,
+          subscription,
+        );
       };
     },
   },

@@ -22,7 +22,7 @@ import {
 } from '../../constants/misc';
 import download from '../files/dowload';
 
-export interface LLMServiceProgress {
+export interface LLMInitialisationProgress {
   error?: Error;
   filename?: string;
   downloaded?: number;
@@ -48,10 +48,19 @@ export default class LLMServices {
 
   private static ollamaClient: Ollama = new Ollama({ host: this.host });
 
+  private static state: 'idle' | 'initialising' | 'running' = 'idle';
+
   static async init(
-    onProgress?: (progress: LLMServiceProgress) => void,
+    onProgress: (progress: LLMInitialisationProgress) => void,
   ): Promise<void> {
     try {
+      if (this.state !== 'idle') {
+        console.info(`LLM Service is ${this.state}`);
+        return;
+      }
+
+      this.state = 'initialising';
+
       console.log('=== LLM Service Initialization Starting ===');
 
       this.setOllamaPath();
@@ -77,6 +86,7 @@ export default class LLMServices {
       });
 
       console.log('=== LLM Service Initialization Complete ===');
+      this.state = 'running';
     } catch (error) {
       onProgress?.({
         status: `initialization failed due to ${error}`,
@@ -137,7 +147,7 @@ export default class LLMServices {
   }
 
   private static async maybeDownloadOllama(
-    onProgress?: (progress: LLMServiceProgress) => void,
+    onProgress?: (progress: LLMInitialisationProgress) => void,
   ): Promise<boolean> {
     if (await this.isOllamaDownloaded()) {
       console.info('Ollama already downloaded');
@@ -710,7 +720,7 @@ export default class LLMServices {
 
   static async downloadModels(
     modelNames: (typeof MODELS)[keyof typeof MODELS][],
-    onProgress?: (progress: LLMServiceProgress) => void,
+    onProgress?: (progress: LLMInitialisationProgress) => void,
   ): Promise<void> {
     if (await this.isOllamaRunning()) {
       const response = await this.ollamaClient.list();
@@ -728,7 +738,7 @@ export default class LLMServices {
 
   static async downloadModel(
     modelName: string,
-    onProgress?: (progress: LLMServiceProgress) => void,
+    onProgress?: (progress: LLMInitialisationProgress) => void,
   ): Promise<void> {
     onProgress?.({
       filename: modelName,

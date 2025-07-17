@@ -62,7 +62,7 @@ export const DIALOG_EVENTS = {
 
 export const LLM_EVENTS = {
   INIT: 'llm:init',
-  PROGRESS: 'llm:progress',
+  INITIALISATION_PROGRESS: 'llm:initialisationProgress',
   GENERATE_QUESTIONS: 'llm:generateQuestions',
   GENERATE: 'llm:generate',
 } as const;

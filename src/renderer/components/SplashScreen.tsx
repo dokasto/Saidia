@@ -1,8 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+/* eslint-disable no-use-before-define */
+/* eslint-disable react/jsx-props-no-spreading */
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as stylex from '@stylexjs/stylex';
 import { Loader, Text, Progress } from '@mantine/core';
-import { LLMServiceProgress } from '../main/llm/services';
 import { useNavigate } from 'react-router-dom';
+import { LLMInitialisationProgress } from '../../main/llm/services';
 
 const formatBytesToMB = (bytes: number): string => {
   const mb = Math.round(bytes / (1024 * 1024));
@@ -11,19 +13,28 @@ const formatBytesToMB = (bytes: number): string => {
 
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const [progress, setProgress] = useState<LLMServiceProgress | null>(null);
+  const [progress, setProgress] = useState<LLMInitialisationProgress | null>(
+    null,
+  );
+  const subscription = useRef<() => void>(() => {});
 
   const handleProgress = useCallback(
-    (progress: LLMServiceProgress) => {
-      setProgress(progress);
+    (p: LLMInitialisationProgress) => {
+      setProgress(p);
     },
     [setProgress],
   );
 
   useEffect(() => {
-    window.electron.llm.onProgress(handleProgress);
-    window.electron.llm.init();
+    subscription.current =
+      window.electron.llm.onInitialisationProgress(handleProgress);
   }, [handleProgress]);
+
+  useEffect(() => {
+    return () => {
+      subscription.current?.();
+    };
+  }, []);
 
   useEffect(() => {
     if (progress?.completed === true) {
@@ -76,30 +87,26 @@ const styles = stylex.create({
     width: '100%',
   },
   loaderContent: {
-    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    display: 'flex',
     flexDirection: 'column',
     gap: 8,
+    justifyContent: 'center',
     marginTop: 16,
   },
   container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
+    alignItems: 'center',
     boxSizing: 'border-box',
     display: 'flex',
+    height: '100%',
     justifyContent: 'center',
-    alignItems: 'center',
+    left: 0,
+    position: 'absolute',
+    top: 0,
+    width: '100%',
   },
   title: {
+    color: 'black',
     fontSize: 46,
-    color: 'black',
-  },
-  subTitle: {
-    fontSize: 16,
-    color: 'black',
   },
 });
