@@ -5,6 +5,7 @@ import Database, { Database as DatabaseType } from 'better-sqlite3';
 import path from 'path';
 import { app } from 'electron';
 import * as fs from 'fs';
+import LLMService from '../llm/services';
 
 class Connection {
   vectorDbInstance: DatabaseType;
@@ -109,6 +110,12 @@ class Connection {
         console.log('Resetting database due to schema conflicts...');
         await this.sequelizeInstance.sync({ force: true });
         console.log('Database reset and synchronized successfully.');
+      }
+
+      try {
+        LLMService.init();
+      } catch (error) {
+        console.error('Failed to initialize LLM:', error);
       }
 
       this.initialized = true;
