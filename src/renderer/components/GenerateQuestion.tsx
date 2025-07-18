@@ -36,7 +36,7 @@ export default function GenerateQuestion() {
           <Text size="sm" fw={500} mb={-4}>
             Number of Questions
           </Text>
-          <Slider min={1} max={60} color="black" />
+          <Slider min={1} max={20} color="black" />
         </Box>
 
         <Button color="black" radius="xl" px="md" size="m">

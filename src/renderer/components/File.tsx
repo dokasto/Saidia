@@ -77,7 +77,7 @@ export default function File({ subject }: Props) {
         </Button>
         {files.length > 0 && (
           <ScrollArea
-            style={{ width: '100%', height: 'auto', maxHeight: 90 }}
+            style={{ width: '100%', height: 'auto', maxHeight: 100 }}
             type="auto"
             scrollbarSize={6}
           >
