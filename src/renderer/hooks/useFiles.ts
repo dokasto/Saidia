@@ -14,14 +14,8 @@ export default function useFiles(subjectId: string | null) {
     const result = await window.electron.ipcRenderer.invoke(
       DIALOG_EVENTS.SHOW_OPEN_DIALOG,
       options,
+      subjectId,
     );
-    console.log('Add Result', result);
-
-    if (!result.canceled && result.filePaths.length > 0) {
-      return true;
-    } else {
-      return false;
-    }
   }
 
   async function getAll() {
@@ -37,9 +31,28 @@ export default function useFiles(subjectId: string | null) {
     }
   }
 
+  async function deleteFile(fileName: string) {
+    if (!subjectId) return false;
+
+    const response = await window.electron.ipcRenderer.invoke(
+      FILE_SYSTEM_EVENTS.DELETE_SUBJECT_FILE,
+      subjectId,
+      fileName,
+    );
+
+    if (response.success) {
+      setFiles((prevFiles) => prevFiles.filter((f) => f !== fileName));
+      return true;
+    } else {
+      alert('Failed to delete file');
+      return false;
+    }
+  }
+
   return {
     files,
     add,
     getAll,
+    deleteFile,
   };
 }

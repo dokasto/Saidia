@@ -1,5 +1,5 @@
 import React from 'react';
-// import { Table } from '@mantine/core';
+import { Table } from '@mantine/core';
 
 export default function QuestionsTableUI() {
   const tableRow = [

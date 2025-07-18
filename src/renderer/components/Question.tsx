@@ -3,6 +3,7 @@ import { Group, TextInput, Menu, Button, Stack } from '@mantine/core';
 import { IconSearch, IconChevronDown } from '@tabler/icons-react';
 import { TSubject } from '../../types';
 import QuestionsTable from './QuestionsTable';
+import GenerateQuestion from './GenerateQuestion';
 
 type Props = {
   subject: TSubject;
@@ -15,7 +16,8 @@ export default function Question({ subject }: Props) {
 
   return (
     <Stack>
-      <h2>Question List</h2>
+      <GenerateQuestion />
+      <h2 style={{ margin: 0 }}>Question List</h2>
       <Group gap="xs" align="center">
         <TextInput
           placeholder="Search…"
