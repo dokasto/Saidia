@@ -1,16 +1,22 @@
-import { Stack, Button, Group, Badge } from '@mantine/core';
-import { IconUpload } from '@tabler/icons-react';
+import {
+  Stack,
+  Button,
+  Group,
+  Badge,
+  ScrollArea,
+  ActionIcon,
+} from '@mantine/core';
+import { IconUpload, IconX } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { TSubject } from '../../types';
 import useFiles from '../hooks/useFiles';
-import { SubjectContext } from '../providers/subjectProvider';
 
 type Props = {
   subject: TSubject;
 };
 
 export default function File({ subject }: Props) {
-  const { add, getAll, files } = useFiles(subject.subject_id);
+  const { add, getAll, files, deleteFile } = useFiles(subject.subject_id);
   const hasListedFiles = useRef(false);
 
   useEffect(() => {
@@ -28,7 +34,24 @@ export default function File({ subject }: Props) {
     } else {
       alert('Error!');
     }
-  }, [getAll]);
+  }, [getAll, add]);
+
+  const handleDelete = useCallback(
+    async (filePath: string) => {
+      console.log('Attempting to delete:', filePath);
+
+      const fileName = filePath.split(/[\\/]/).pop() ?? filePath;
+      console.log(fileName);
+
+      const result = await deleteFile(fileName);
+      if (result) {
+        getAll();
+      } else {
+        alert('Failed to delete file.');
+      }
+    },
+    [deleteFile, getAll],
+  );
 
   return (
     <div>
@@ -52,22 +75,40 @@ export default function File({ subject }: Props) {
         >
           Upload files for this subject
         </Button>
-
-        <Group gap="sm" wrap="wrap">
-          {files.map((filePath, index) => {
-            return (
-              <Badge
-                key={index}
-                color="gray"
-                variant="light"
-                radius="xl"
-                size="lg"
-              >
-                📄 {filePath}
-              </Badge>
-            );
-          })}
-        </Group>
+        {files.length > 0 && (
+          <ScrollArea
+            style={{ width: '100%', height: 'auto', maxHeight: 100 }}
+            type="auto"
+            scrollbarSize={6}
+          >
+            <Group gap="sm" wrap="wrap">
+              {files.map((filePath, index) => {
+                const fileName = filePath.split(/[/\\]/).pop();
+                return (
+                  <Badge
+                    key={index}
+                    color="gray"
+                    variant="light"
+                    radius="xl"
+                    size="lg"
+                    rightSection={
+                      <ActionIcon
+                        size="xs"
+                        color="gray"
+                        variant="transparent"
+                        onClick={() => handleDelete(fileName)}
+                      >
+                        <IconX size={12} />
+                      </ActionIcon>
+                    }
+                  >
+                    📄 {fileName}
+                  </Badge>
+                );
+              })}
+            </Group>
+          </ScrollArea>
+        )}
       </Stack>
     </div>
   );
