@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Select, Slider, Stack, Group, Text, Box, Button } from '@mantine/core';
 import { QuestionType, QuestionDifficulty } from '../../constants/misc';
+import { useGenerateQuestion } from '../hooks/useGenerateQuestion';
+import { TSubject } from '../../types';
 
 const questionTypeOptions = Object.values(QuestionType).map((value) => ({
   value,
@@ -9,10 +11,36 @@ const questionTypeOptions = Object.values(QuestionType).map((value) => ({
 
 const difficultyOptions = Object.values(QuestionDifficulty).map((value) => ({
   value,
-  label: value.charAt(0).toUpperCase() + value.slice(1), // "easy" → "Easy"
+  label: value.charAt(0).toUpperCase() + value.slice(1),
 }));
 
-export default function GenerateQuestion() {
+type Props = {
+  subject: TSubject;
+};
+
+export default function GenerateQuestion({ subject }: Props) {
+  const { generateQuestion, questions } = useGenerateQuestion(
+    subject.subject_id,
+  );
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(
+    null,
+  );
+  const [numQuestions, setNumQuestions] = useState<number>(1);
+
+  const handleGenerate = async () => {
+    try {
+      await generateQuestion(
+        subject.subject_id,
+        selectedType,
+        selectedDifficulty,
+        numQuestions,
+      );
+    } catch (err) {
+      console.error('Failed to generate questions:', err);
+    }
+  };
+
   return (
     <Stack>
       <h3 style={{ margin: 0 }}>Generate Question</h3>
@@ -20,6 +48,8 @@ export default function GenerateQuestion() {
         <Select
           placeholder="Question Type"
           data={questionTypeOptions}
+          value={selectedType}
+          onChange={setSelectedType}
           searchable
           nothingFoundMessage="Question type not found..."
         />
@@ -27,8 +57,9 @@ export default function GenerateQuestion() {
         <Select
           placeholder="difficulty"
           data={difficultyOptions}
+          value={selectedDifficulty}
+          onChange={setSelectedDifficulty}
           w={120}
-          radius="xl"
           variant="default"
         />
 
@@ -36,11 +67,17 @@ export default function GenerateQuestion() {
           <Text size="sm" fw={500} mb={-4}>
             Number of Questions
           </Text>
-          <Slider min={1} max={20} color="black" />
+          <Slider
+            min={1}
+            max={20}
+            color="black"
+            value={numQuestions}
+            onChange={setNumQuestions}
+          />
         </Box>
 
-        <Button color="black" radius="xl" px="md" size="m">
-          Generate Questions
+        <Button color="black" px="md" size="m" onClick={handleGenerate}>
+          Generate
         </Button>
       </Group>
     </Stack>

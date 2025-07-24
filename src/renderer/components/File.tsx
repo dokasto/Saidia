@@ -8,6 +8,7 @@ import {
 } from '@mantine/core';
 import { IconUpload, IconX } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useRef } from 'react';
+import { notifications } from '@mantine/notifications';
 import { TSubject } from '../../types';
 import useFiles from '../hooks/useFiles';
 
@@ -32,22 +33,19 @@ export default function File({ subject }: Props) {
     if (result) {
       getAll();
     } else {
-      alert('Error!');
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to upload files. Please try again.',
+      });
     }
   }, [getAll, add]);
 
   const handleDelete = useCallback(
     async (filePath: string) => {
-      console.log('Attempting to delete:', filePath);
-
       const fileName = filePath.split(/[\\/]/).pop() ?? filePath;
-      console.log(fileName);
-
       const result = await deleteFile(fileName);
       if (result) {
         getAll();
-      } else {
-        alert('Failed to delete file.');
       }
     },
     [deleteFile, getAll],
