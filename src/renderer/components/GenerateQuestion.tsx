@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Select, Slider, Stack, Group, Text, Box, Button } from '@mantine/core';
 import { QuestionType, QuestionDifficulty } from '../../constants/misc';
 import { useGenerateQuestion } from '../hooks/useGenerateQuestion';
-import { TSubject } from '../../types';
+import { TQuestionDifficulty, TSubject } from '../../types';
 
 const questionTypeOptions = Object.values(QuestionType).map((value) => ({
   value,
@@ -23,9 +23,8 @@ export default function GenerateQuestion({ subject }: Props) {
     subject.subject_id,
   );
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(
-    null,
-  );
+  const [selectedDifficulty, setSelectedDifficulty] =
+    useState<TQuestionDifficulty | null>(null);
   const [numQuestions, setNumQuestions] = useState<number>(1);
 
   const handleGenerate = async () => {
