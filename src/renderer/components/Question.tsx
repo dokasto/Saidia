@@ -16,7 +16,7 @@ export default function Question({ subject }: Props) {
 
   return (
     <Stack>
-      <GenerateQuestion />
+      <GenerateQuestion subject={subject} />
       <h2 style={{ margin: 0 }}>Question List</h2>
       <Group gap="xs" align="center">
         <TextInput
