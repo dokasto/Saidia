@@ -3,6 +3,7 @@ import { Select, Slider, Stack, Group, Text, Box, Button } from '@mantine/core';
 import { QuestionType, QuestionDifficulty } from '../../constants/misc';
 import { useGenerateQuestion } from '../hooks/useGenerateQuestion';
 import { TQuestionDifficulty, TSubject } from '../../types';
+import QuestionEditorModal from './QuestionEditorModal';
 
 const questionTypeOptions = Object.values(QuestionType).map((value) => ({
   value,
@@ -22,10 +23,12 @@ export default function GenerateQuestion({ subject }: Props) {
   const { generateQuestion, questions } = useGenerateQuestion(
     subject.subject_id,
   );
+
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] =
     useState<TQuestionDifficulty | null>(null);
   const [numQuestions, setNumQuestions] = useState<number>(1);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleGenerate = async () => {
     try {
@@ -35,6 +38,7 @@ export default function GenerateQuestion({ subject }: Props) {
         selectedDifficulty,
         numQuestions,
       );
+      setModalOpen(true);
     } catch (err) {
       console.error('Failed to generate questions:', err);
     }
@@ -54,12 +58,11 @@ export default function GenerateQuestion({ subject }: Props) {
         />
 
         <Select
-          placeholder="difficulty"
+          placeholder="Difficulty"
           data={difficultyOptions}
           value={selectedDifficulty}
           onChange={setSelectedDifficulty}
           w={120}
-          variant="default"
         />
 
         <Box w={180}>
@@ -75,10 +78,23 @@ export default function GenerateQuestion({ subject }: Props) {
           />
         </Box>
 
-        <Button color="black" px="md" size="m" onClick={handleGenerate}>
+        <Button
+          color="black"
+          px="md"
+          size="m"
+          onClick={handleGenerate}
+          disabled={!selectedType || !selectedDifficulty}
+        >
           Generate
         </Button>
       </Group>
+
+      <QuestionEditorModal
+        opened={modalOpen}
+        onClose={() => setModalOpen(false)}
+        questions={questions}
+        questionType={selectedType}
+      />
     </Stack>
   );
 }
