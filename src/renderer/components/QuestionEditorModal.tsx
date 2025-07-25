@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Textarea, Text, Stack, Title } from '@mantine/core';
+import { Modal, Textarea, Text, Stack, Title, ScrollArea } from '@mantine/core';
 import { TGeneratedQuestion } from '../../types';
 
 type Props = {
@@ -21,7 +21,7 @@ export default function QuestionEditorModal({
       onClose={onClose}
       title="Generated Questions"
       size="xl"
-      scrollArea="inside"
+      scrollAreaComponent={ScrollArea.Autosize}
     >
       <Stack spacing="lg">
         {questions.map((q, index) => (
