@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import '@mantine/core/styles.css';
-import '@mantine/notifications/styles.css';
 import './App.css';
 import { createTheme, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
@@ -20,7 +19,7 @@ export default function App() {
 
   return (
     <MantineProvider theme={theme}>
-      <Notifications color="gray" position="top-right" />
+      <Notifications position="top-right" />
       <SubjectProvider>
         <Router>
           <Routes>

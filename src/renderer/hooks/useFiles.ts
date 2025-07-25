@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { notifications } from '@mantine/notifications';
 import { DIALOG_EVENTS, FILE_SYSTEM_EVENTS } from '../../constants/events';
 import { FILE_EXTENSIONS } from '../../constants/misc';
 
@@ -24,13 +23,11 @@ export default function useFiles(subjectId: string | null) {
       FILE_SYSTEM_EVENTS.LIST_SUBJECT_FILES,
       subjectId,
     );
+    console.log(response);
     if (response.success) {
       setFiles(response.data);
     } else {
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to get files. Please try again.',
-      });
+      alert('Failed to get files');
     }
   }
 
@@ -45,16 +42,9 @@ export default function useFiles(subjectId: string | null) {
 
     if (response.success) {
       setFiles((prevFiles) => prevFiles.filter((f) => f !== fileName));
-      notifications.show({
-        title: 'File Deleted',
-        message: `"${fileName}" was deleted successfully.`,
-      });
       return true;
     } else {
-      notifications.show({
-        title: 'Delete Failed',
-        message: 'Failed to delete file. Please try again.',
-      });
+      alert('Failed to delete file');
       return false;
     }
   }
