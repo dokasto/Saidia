@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   Textarea,
@@ -9,8 +9,8 @@ import {
   Group,
   Button,
 } from '@mantine/core';
-import { IconEdit } from '@tabler/icons-react';
 import { TGeneratedQuestion, TSubject } from '../../types';
+import { notifications } from '@mantine/notifications';
 
 type Props = {
   opened: boolean;
@@ -27,11 +27,41 @@ export default function QuestionEditorModal({
   questionType,
   subject,
 }: Props) {
-  const [isEdiing, setIsEditing] = useState(false);
+  const [editableQuestions, SeteditableQuestions] =
+    useState<TGeneratedQuestion[]>(questions);
 
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
+  useEffect(() => {
+    SeteditableQuestions(questions);
+  }, [questions]);
+
+  function handleQuestionTextEdit(index: number, value: string) {
+    const updated = [...editableQuestions];
+    updated[index].question = value;
+    SeteditableQuestions(updated);
+  }
+
+  function handleChoiceEdit(
+    questionIndex: number,
+    choiceIndex: number,
+    value: string,
+  ) {
+    const updated = [...editableQuestions];
+    if (updated[questionIndex].choices) {
+      updated[questionIndex].choices[choiceIndex] = value;
+    }
+    SeteditableQuestions(updated);
+  }
+
+  function handleSave() {
+    notifications.show({
+      title: 'Question Saved',
+      message: 'Question has been saved!',
+      color: 'black',
+      style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
+    });
+    console.log('Saving edited questions:', editableQuestions);
+    onClose();
+  }
 
   return (
     <Modal
@@ -44,30 +74,24 @@ export default function QuestionEditorModal({
       <Stack spacing="lg">
         {questions.map((q, index) => (
           <Stack key={index} spacing="xs">
-            <Group align="center" className="hover-group">
-              <Title order={5}>Question {index + 1}</Title>
-              <IconEdit
-                size={18}
-                className="edit-icon"
-                color="gray"
-                onClick={() => setIsEditing(true)}
-              />
-            </Group>
-            {isEdiing ? (
-              <Textarea value={q.question} autosize minRows={2} />
-            ) : (
-              <Text className="mb-2">{q.question}</Text>
-            )}
-
+            <Title order={5}>Question {index + 1}</Title>
+            <Textarea
+              value={q.question}
+              autosize
+              onChange={(e) => {
+                handleQuestionTextEdit(index, e.target.value);
+              }}
+            />
             {questionType === 'multiple_choice' && q.choices && (
               <Stack spacing="xs">
                 {q.choices.map((choice, i) => (
-                  <Group key={i} align="center" className="hover-group">
-                    <Text>
-                      <b>{String.fromCharCode(65 + i)}.</b> {choice}
-                    </Text>
-                    <IconEdit size={16} className="edit-icon" color="gray" />
-                  </Group>
+                  <Textarea
+                    key={i}
+                    autosize
+                    value={choice}
+                    onChange={(e) => handleChoiceEdit(index, i, e.target.value)}
+                    label={`Option ${String.fromCharCode(65 + i)}`}
+                  />
                 ))}
               </Stack>
             )}
@@ -75,8 +99,8 @@ export default function QuestionEditorModal({
         ))}
 
         <Group justify="flex-end" mt="md">
-          <Button onClick={onClose} color="rgba(28, 28, 28, 1)">
-            Done
+          <Button onClick={handleSave} color="rgba(28, 28, 28, 1)">
+            Save
           </Button>
         </Group>
       </Stack>

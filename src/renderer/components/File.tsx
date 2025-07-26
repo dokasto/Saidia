@@ -31,8 +31,6 @@ export default function File({ subject }: Props) {
     const result = await add();
     if (result) {
       getAll();
-    } else {
-      alert('Error!');
     }
   }, [getAll, add]);
 

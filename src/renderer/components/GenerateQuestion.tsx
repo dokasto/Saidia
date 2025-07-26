@@ -31,11 +31,9 @@ export default function GenerateQuestion({ subject }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleGenerate = async () => {
-    console.log('Subject:', subject);
-
     try {
       await generateQuestion(
-        subject?.subject_id ?? '',
+        subject.subject_id,
         selectedType,
         selectedDifficulty,
         numQuestions,

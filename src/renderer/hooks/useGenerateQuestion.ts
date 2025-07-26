@@ -28,7 +28,7 @@ export function useGenerateQuestion(subjectId: string | null) {
     ];
 
     setQuestions(mockResponse);
-    console.log('Generated  Questions:', mockResponse);
+    console.log('Generated Questions:', mockResponse);
   };
 
   return { generateQuestion, questions };
