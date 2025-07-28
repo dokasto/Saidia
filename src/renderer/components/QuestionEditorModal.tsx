@@ -19,6 +19,7 @@ type Props = {
   questionType: string | null;
   subject: TSubject;
   selectedType: string | null;
+  onSaved: () => Promise<void>;
   selectedDifficulty: TQuestionDifficulty | null;
 };
 
@@ -30,6 +31,7 @@ export default function QuestionEditorModal({
   selectedType,
   selectedDifficulty,
   subject,
+  onSaved,
 }: Props) {
   const [editableQuestions, SeteditableQuestions] =
     useState<TGeneratedQuestion[]>(questions);
@@ -50,10 +52,7 @@ export default function QuestionEditorModal({
     value: string,
   ) {
     const updated = [...editableQuestions];
-    if (
-      updated[questionIndex].choices &&
-      choiceIndex < updated[questionIndex].choices.length
-    ) {
+    if (updated[questionIndex]?.choices[choiceIndex] != null) {
       updated[questionIndex].choices[choiceIndex] = value;
     }
     SeteditableQuestions(updated);
@@ -68,6 +67,7 @@ export default function QuestionEditorModal({
       selectedType,
     );
 
+    console.log('saved Questions :', response);
     if (response.success) {
       notifications.show({
         title: 'Question Saved',
@@ -84,6 +84,7 @@ export default function QuestionEditorModal({
       });
     }
     onClose();
+    onSaved();
   }
 
   return (

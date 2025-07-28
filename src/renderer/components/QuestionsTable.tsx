@@ -1,48 +1,26 @@
 import React from 'react';
-import { Table } from '@mantine/core';
+import { Button, Table } from '@mantine/core';
+import { TQuestion } from '../../types';
 
-export default function QuestionsTableUI() {
-  const tableRow = [
-    {
-      question: 'What is a Binary Tree?',
-      difficulty: 'Easy',
-      edit: 'Edit',
-      delete: 'Delete',
-    },
+type Props = {
+  questions: TQuestion[];
+};
 
-    {
-      question: 'What is a Binary Tree?',
-      difficulty: 'Hard',
-      edit: 'Edit',
-      delete: 'Delete',
-    },
-    {
-      question: 'What is a Binary Tree?',
-      difficulty: 'Medium',
-      edit: 'Edit',
-      delete: 'Delete',
-    },
-    {
-      question: 'What fomular for finding the length of a rectangle',
-      difficulty: 'Easy',
-      edit: 'Edit',
-      delete: 'Delete',
-    },
-
-    {
-      question: 'What fomular for finding the length of a rectangle',
-      difficulty: 'Easy',
-      edit: 'Edit',
-      delete: 'Delete',
-    },
-  ];
-
-  const rows = tableRow.map((element) => (
-    <Table.Tr key={element.question}>
-      <Table.Td>{element.question}</Table.Td>
-      <Table.Td>{element.difficulty}</Table.Td>
-      <Table.Td>{element.edit}</Table.Td>
-      <Table.Td>{element.delete}</Table.Td>
+export default function QuestionsTableUI({ questions }: Props) {
+  const rows = questions.map((q) => (
+    <Table.Tr key={q.question_id}>
+      <Table.Td>{q.title}</Table.Td>
+      <Table.Td>{q.difficulty}</Table.Td>
+      <Table.Td>
+        <Button variant="transparent" size="xs">
+          Edit
+        </Button>
+      </Table.Td>
+      <Table.Td>
+        <Button variant="transparent" color="red" size="xs">
+          Delete
+        </Button>
+      </Table.Td>
     </Table.Tr>
   ));
 

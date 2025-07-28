@@ -27,6 +27,16 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
+          <footer
+            style={{
+              textAlign: 'center',
+              padding: '1rem',
+              fontSize: '0.9rem',
+              color: '#555',
+            }}
+          >
+            Built by Joy and Udo
+          </footer>
         </Router>
       </SubjectProvider>
     </MantineProvider>
