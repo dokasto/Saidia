@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { TGeneratedQuestion } from '../../types';
-import { LLM_EVENTS } from '../../constants/events';
 
-export function useGenerateQuestion(subjectId: string | null) {
+export default function useGenerateQuestion(subjectId: string | null) {
   const [questions, setQuestions] = useState<TGeneratedQuestion[]>([]);
 
   const generateQuestion = async (
@@ -20,10 +19,12 @@ export function useGenerateQuestion(subjectId: string | null) {
       {
         question: 'Explain the difference between stack and queue.',
         choices: ['O(n)', 'O(log n)', 'O(n log n)', 'O(1)'],
+        answer: 0,
       },
       {
         question: 'Write a function to reverse a linked list.',
         choices: [],
+        answer: undefined,
       },
     ];
 

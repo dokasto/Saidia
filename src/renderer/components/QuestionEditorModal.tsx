@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import {
   Modal,
   Textarea,
-  Text,
   Stack,
   Title,
   ScrollArea,
   Group,
   Button,
 } from '@mantine/core';
-import { TGeneratedQuestion, TSubject } from '../../types';
 import { notifications } from '@mantine/notifications';
+import { TGeneratedQuestion, TQuestionDifficulty, TSubject } from '../../types';
+import { QUESTION_EVENTS } from '../../constants/events';
 
 type Props = {
   opened: boolean;
@@ -18,6 +18,8 @@ type Props = {
   questions: TGeneratedQuestion[];
   questionType: string | null;
   subject: TSubject;
+  selectedType: string | null;
+  selectedDifficulty: TQuestionDifficulty | null;
 };
 
 export default function QuestionEditorModal({
@@ -25,6 +27,8 @@ export default function QuestionEditorModal({
   onClose,
   questions,
   questionType,
+  selectedType,
+  selectedDifficulty,
   subject,
 }: Props) {
   const [editableQuestions, SeteditableQuestions] =
@@ -46,20 +50,39 @@ export default function QuestionEditorModal({
     value: string,
   ) {
     const updated = [...editableQuestions];
-    if (updated[questionIndex].choices) {
+    if (
+      updated[questionIndex].choices &&
+      choiceIndex < updated[questionIndex].choices.length
+    ) {
       updated[questionIndex].choices[choiceIndex] = value;
     }
     SeteditableQuestions(updated);
   }
 
-  function handleSave() {
-    notifications.show({
-      title: 'Question Saved',
-      message: 'Question has been saved!',
-      color: 'black',
-      style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
-    });
-    console.log('Saving edited questions:', editableQuestions);
+  async function handleSave() {
+    const response = await window.electron.ipcRenderer.invoke(
+      QUESTION_EVENTS.SAVE_QUESTIONS,
+      subject.subject_id,
+      editableQuestions,
+      selectedDifficulty,
+      selectedType,
+    );
+
+    if (response.success) {
+      notifications.show({
+        title: 'Question Saved',
+        message: 'Question has been saved!',
+        color: 'black',
+        style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
+      });
+    } else {
+      notifications.show({
+        title: 'Failed to save',
+        message: 'Failed to save questions',
+        color: 'black',
+        style: { backgroundColor: 'rgba(251, 76, 76, 0.25)' },
+      });
+    }
     onClose();
   }
 
@@ -71,9 +94,9 @@ export default function QuestionEditorModal({
       size="xl"
       scrollAreaComponent={ScrollArea.Autosize}
     >
-      <Stack spacing="lg">
-        {questions.map((q, index) => (
-          <Stack key={index} spacing="xs">
+      <Stack gap="lg">
+        {editableQuestions.map((q, index) => (
+          <Stack key={index} gap="xs">
             <Title order={5}>Question {index + 1}</Title>
             <Textarea
               value={q.question}
@@ -83,7 +106,7 @@ export default function QuestionEditorModal({
               }}
             />
             {questionType === 'multiple_choice' && q.choices && (
-              <Stack spacing="xs">
+              <Stack gap="xs">
                 {q.choices.map((choice, i) => (
                   <Textarea
                     key={i}

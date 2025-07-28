@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import {
   NavLink,
   Modal,

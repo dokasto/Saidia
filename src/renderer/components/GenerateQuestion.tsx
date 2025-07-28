@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Select, Slider, Stack, Group, Text, Box, Button } from '@mantine/core';
 import { QuestionType, QuestionDifficulty } from '../../constants/misc';
-import { useGenerateQuestion } from '../hooks/useGenerateQuestion';
+import useGenerateQuestion from '../hooks/useGenerateQuestion';
 import { TQuestionDifficulty, TSubject } from '../../types';
 import QuestionEditorModal from './QuestionEditorModal';
 
@@ -94,6 +94,8 @@ export default function GenerateQuestion({ subject }: Props) {
         questions={questions}
         questionType={selectedType}
         subject={subject}
+        selectedDifficulty={selectedDifficulty}
+        selectedType={selectedType}
       />
     </Stack>
   );
