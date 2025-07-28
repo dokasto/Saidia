@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DIALOG_EVENTS, FILE_SYSTEM_EVENTS } from '../../constants/events';
 import { FILE_EXTENSIONS } from '../../constants/misc';
+import { notifications } from '@mantine/notifications';
 
 export default function useFiles(subjectId: string | null) {
   const [files, setFiles] = useState<string[]>([]);
@@ -16,6 +17,23 @@ export default function useFiles(subjectId: string | null) {
       options,
       subjectId,
     );
+
+    if (result.success) {
+      notifications.show({
+        title: 'Uploaded!',
+        message: 'File has been uploaded!',
+        color: 'black',
+        style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
+      });
+    } else {
+      notifications.show({
+        title: 'Failed',
+        message: 'Failed to upload file!',
+        color: 'black',
+        style: { backgroundColor: 'rgba(251, 76, 76, 0.25)' },
+      });
+      return false;
+    }
   }
 
   async function getAll() {
@@ -42,9 +60,20 @@ export default function useFiles(subjectId: string | null) {
 
     if (response.success) {
       setFiles((prevFiles) => prevFiles.filter((f) => f !== fileName));
+      notifications.show({
+        title: 'Deleted',
+        message: 'File has been deleted!',
+        color: 'black',
+        style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
+      });
       return true;
     } else {
-      alert('Failed to delete file');
+      notifications.show({
+        title: 'Failed',
+        message: 'Failed to delete file!',
+        color: 'black',
+        style: { backgroundColor: 'rgba(251, 76, 76, 0.25)' },
+      });
       return false;
     }
   }
