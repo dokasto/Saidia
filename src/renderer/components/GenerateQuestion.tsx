@@ -17,9 +17,10 @@ const difficultyOptions = Object.values(QuestionDifficulty).map((value) => ({
 
 type Props = {
   subject: TSubject;
+  onSaved: () => Promise<void>;
 };
 
-export default function GenerateQuestion({ subject }: Props) {
+export default function GenerateQuestion({ subject, onSaved }: Props) {
   const { generateQuestion, questions } = useGenerateQuestion(
     subject.subject_id,
   );
@@ -96,6 +97,7 @@ export default function GenerateQuestion({ subject }: Props) {
         subject={subject}
         selectedDifficulty={selectedDifficulty}
         selectedType={selectedType}
+        onSaved={onSaved}
       />
     </Stack>
   );

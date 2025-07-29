@@ -4,6 +4,7 @@ import { IconSearch, IconChevronDown } from '@tabler/icons-react';
 import { TSubject } from '../../types';
 import QuestionsTable from './QuestionsTable';
 import GenerateQuestion from './GenerateQuestion';
+import useGetQuestions from '../hooks/useGetQuestions';
 
 type Props = {
   subject: TSubject;
@@ -11,12 +12,13 @@ type Props = {
 
 export default function Question({ subject }: Props) {
   const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string | null>(null);
+  // const [sortBy, setSortBy] = useState<string | null>(null);
+  // const [filter, setFilter] = useState<string | null>(null);
+  const { questions, getQuestions } = useGetQuestions(subject.subject_id);
 
   return (
     <Stack>
-      <GenerateQuestion subject={subject} />
+      <GenerateQuestion subject={subject} onSaved={getQuestions} />
       <h2 style={{ margin: 0 }}>Question List</h2>
       <Group gap="xs" align="center">
         <TextInput
@@ -93,7 +95,7 @@ export default function Question({ subject }: Props) {
           </Menu.Dropdown>
         </Menu>
       </Group>
-      <QuestionsTable />
+      <QuestionsTable questions={questions ?? []} onSaved={getQuestions} />
     </Stack>
   );
 }

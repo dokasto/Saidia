@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { notifications } from '@mantine/notifications';
 import { DIALOG_EVENTS, FILE_SYSTEM_EVENTS } from '../../constants/events';
 import { FILE_EXTENSIONS } from '../../constants/misc';
-import { notifications } from '@mantine/notifications';
 
 export default function useFiles(subjectId: string | null) {
   const [files, setFiles] = useState<string[]>([]);

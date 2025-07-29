@@ -27,6 +27,33 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
+          <footer
+            style={{
+              textAlign: 'center',
+              padding: '1rem',
+              fontSize: '0.9rem',
+              color: '#555',
+            }}
+          >
+            Built by{' '}
+            <a
+              href="https://www.linkedin.com/in/joy-nk/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0077b5', textDecoration: 'none' }}
+            >
+              Joy
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://www.linkedin.com/in/thisisudo/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0077b5', textDecoration: 'none' }}
+            >
+              Udo
+            </a>
+          </footer>
         </Router>
       </SubjectProvider>
     </MantineProvider>
