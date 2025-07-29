@@ -35,7 +35,24 @@ export default function App() {
               color: '#555',
             }}
           >
-            Built by Joy and Udo
+            Built by{' '}
+            <a
+              href="https://www.linkedin.com/in/joy-nk/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0077b5', textDecoration: 'none' }}
+            >
+              Joy
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://www.linkedin.com/in/thisisudo/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#0077b5', textDecoration: 'none' }}
+            >
+              Udo
+            </a>
           </footer>
         </Router>
       </SubjectProvider>
