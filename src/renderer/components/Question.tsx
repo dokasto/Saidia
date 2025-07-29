@@ -12,8 +12,8 @@ type Props = {
 
 export default function Question({ subject }: Props) {
   const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string | null>(null);
+  // const [sortBy, setSortBy] = useState<string | null>(null);
+  // const [filter, setFilter] = useState<string | null>(null);
   const { questions, getQuestions } = useGetQuestions(subject.subject_id);
 
   return (
@@ -95,7 +95,7 @@ export default function Question({ subject }: Props) {
           </Menu.Dropdown>
         </Menu>
       </Group>
-      <QuestionsTable questions={questions} />
+      <QuestionsTable questions={questions ?? []} onSaved={getQuestions} />
     </Stack>
   );
 }
