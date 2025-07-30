@@ -17,10 +17,10 @@ import {
   IconEdit,
   IconTrash,
 } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import { SUBJECT_EVENTS } from '../../constants/events';
 import { Subject } from '../../main/database/models';
 import { SubjectContext } from '../providers/subjectProvider';
-import { notifications } from '@mantine/notifications';
 
 export default function SideMenu() {
   const { create, changeName, remove, selected, subjects, getAll, select } =
@@ -63,6 +63,11 @@ export default function SideMenu() {
 
   const handleDelete = useCallback(
     async (subjectId: string) => {
+      const confirmed = window.confirm(
+        'Are you sure you want to delete this subject?',
+      );
+      if (!confirmed) return;
+
       const success = await remove(subjectId);
       if (success) {
         await getAll();

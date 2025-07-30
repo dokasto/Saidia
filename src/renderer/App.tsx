@@ -29,10 +29,16 @@ export default function App() {
           </Routes>
           <footer
             style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
               textAlign: 'center',
               padding: '1rem',
               fontSize: '0.9rem',
+              fontWeight: 'bold',
               color: '#555',
+              backgroundColor: '#f9f9f9',
             }}
           >
             Built by{' '}
@@ -40,7 +46,11 @@ export default function App() {
               href="https://www.linkedin.com/in/joy-nk/"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#0077b5', textDecoration: 'none' }}
+              style={{
+                color: '#0077b5',
+                textDecoration: 'none',
+                fontWeight: 'bold',
+              }}
             >
               Joy
             </a>{' '}
@@ -49,7 +59,11 @@ export default function App() {
               href="https://www.linkedin.com/in/thisisudo/"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#0077b5', textDecoration: 'none' }}
+              style={{
+                color: '#0077b5',
+                textDecoration: 'none',
+                fontWeight: 'bold',
+              }}
             >
               Udo
             </a>

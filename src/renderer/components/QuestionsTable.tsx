@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Button, Stack, Table } from '@mantine/core';
+import React, { useEffect, useState } from 'react';
+import { Button, Checkbox, Stack, Table } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { TQuestion } from '../../types';
 import { QUESTION_EVENTS } from '../../constants/events';
 import SingleQuestionEditModal from './SingleQuestionEditModal';
+import PrintModal from './PrintModal';
 
 type Props = {
   questions: TQuestion[];
@@ -14,6 +15,23 @@ export default function QuestionsTableUI({ questions, onSaved }: Props) {
   const [questionBeingEdited, setQuestionBeingEdited] =
     useState<TQuestion | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]); // to hold selected questions
+
+  const toggleSelect = (id: string) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(id) ? prev.filter((q) => q !== id) : [...prev, id],
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedQuestionIds.length === questions.length) {
+      setSelectedQuestionIds([]);
+    } else {
+      setSelectedQuestionIds(questions.map((q) => q.question_id));
+    }
+  };
 
   const handleDelete = async (questionId: string) => {
     const response = await window.electron.ipcRenderer.invoke(
@@ -39,8 +57,18 @@ export default function QuestionsTableUI({ questions, onSaved }: Props) {
     }
   };
 
+  useEffect(() => {
+    setSelectedQuestionIds([]);
+  }, [questions]);
+
   const rows = questions.map((q) => (
     <Table.Tr key={q.question_id}>
+      <Table.Td>
+        <Checkbox
+          checked={selectedQuestionIds.includes(q.question_id)}
+          onChange={() => toggleSelect(q.question_id)}
+        />
+      </Table.Td>
       <Table.Td>{q.title}</Table.Td>
       <Table.Td>{q.difficulty}</Table.Td>
       <Table.Td>
@@ -79,6 +107,20 @@ export default function QuestionsTableUI({ questions, onSaved }: Props) {
         >
           <Table.Thead>
             <Table.Tr>
+              <Table.Th>
+                <Checkbox
+                  color="gray"
+                  checked={
+                    selectedQuestionIds.length === questions.length &&
+                    questions.length > 0
+                  }
+                  indeterminate={
+                    selectedQuestionIds.length > 0 &&
+                    selectedQuestionIds.length < questions.length
+                  }
+                  onChange={toggleSelectAll}
+                />
+              </Table.Th>
               <Table.Th>Question</Table.Th>
               <Table.Th>Difficulty</Table.Th>
               <Table.Th>Edit</Table.Th>
@@ -97,6 +139,20 @@ export default function QuestionsTableUI({ questions, onSaved }: Props) {
         }}
         question={questionBeingEdited}
         onSaved={onSaved}
+      />
+
+      {selectedQuestionIds.length > 0 && (
+        <Button color="gray" onClick={() => setPrintModalOpen(true)}>
+          Print Selected Question ({selectedQuestionIds.length})
+        </Button>
+      )}
+
+      <PrintModal
+        opened={printModalOpen}
+        onClose={() => setPrintModalOpen(false)}
+        questions={questions.filter((q) =>
+          selectedQuestionIds.includes(q.question_id),
+        )}
       />
     </Stack>
   );
