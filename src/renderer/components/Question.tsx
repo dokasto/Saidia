@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Group, TextInput, Menu, Button, Stack } from '@mantine/core';
-import { IconSearch, IconChevronDown } from '@tabler/icons-react';
+import { Group, TextInput, Stack } from '@mantine/core';
+import { IconSearch } from '@tabler/icons-react';
 import { TSubject } from '../../types';
 import QuestionsTable from './QuestionsTable';
 import GenerateQuestion from './GenerateQuestion';
@@ -12,8 +12,6 @@ type Props = {
 
 export default function Question({ subject }: Props) {
   const [query, setQuery] = useState('');
-  // const [sortBy, setSortBy] = useState<string | null>(null);
-  // const [filter, setFilter] = useState<string | null>(null);
   const { questions, getQuestions } = useGetQuestions(subject.subject_id);
 
   return (
@@ -28,7 +26,7 @@ export default function Question({ subject }: Props) {
           }
           value={query}
           onChange={(e) => setQuery(e.currentTarget.value)}
-          style={{ width: '85%' }}
+          style={{ width: '100%' }}
           size="sm"
           radius="md"
           styles={{
@@ -38,62 +36,6 @@ export default function Question({ subject }: Props) {
             },
           }}
         />
-        <Menu shadow="md" width={160} position="bottom-start">
-          <Menu.Target>
-            <Button
-              variant="light"
-              color="gray"
-              radius="xl"
-              size="xs"
-              rightSection={<IconChevronDown size={12} />}
-              styles={{ root: { padding: '4px 12px' } }}
-            >
-              Sort
-            </Button>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Label>Sort by</Menu.Label>
-            <Menu.Item onClick={() => console.log('Sort: Name')}>
-              Name
-            </Menu.Item>
-            <Menu.Item onClick={() => console.log('Sort: Date')}>
-              Date
-            </Menu.Item>
-            <Menu.Item onClick={() => console.log('Sort: Size')}>
-              Size
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-
-        {/* Filter Menu */}
-        <Menu shadow="md" width={160} position="bottom-start">
-          <Menu.Target>
-            <Button
-              variant="light"
-              color="gray"
-              radius="xl"
-              size="xs"
-              rightSection={<IconChevronDown size={12} />}
-              styles={{ root: { padding: '4px 12px' } }}
-            >
-              Filter
-            </Button>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Label>Filter by</Menu.Label>
-            <Menu.Item onClick={() => console.log('Filter: All')}>
-              All
-            </Menu.Item>
-            <Menu.Item onClick={() => console.log('Filter: Category A')}>
-              Category A
-            </Menu.Item>
-            <Menu.Item onClick={() => console.log('Filter: Category B')}>
-              Category B
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
       </Group>
       <QuestionsTable questions={questions ?? []} onSaved={getQuestions} />
     </Stack>

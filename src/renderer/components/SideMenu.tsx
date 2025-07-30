@@ -20,6 +20,7 @@ import {
 import { SUBJECT_EVENTS } from '../../constants/events';
 import { Subject } from '../../main/database/models';
 import { SubjectContext } from '../providers/subjectProvider';
+import { notifications } from '@mantine/notifications';
 
 export default function SideMenu() {
   const { create, changeName, remove, selected, subjects, getAll, select } =
@@ -51,6 +52,12 @@ export default function SideMenu() {
         await getAll();
       }
       closeEdit();
+      notifications.show({
+        title: 'Subject Updated',
+        message: 'Subject name has been updated!',
+        color: 'black',
+        style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
+      });
     }
   }, [editSubjectId, editedName, getAll]);
 
@@ -58,8 +65,20 @@ export default function SideMenu() {
     async (subjectId: string) => {
       const success = await remove(subjectId);
       if (success) {
-        alert('success!');
         await getAll();
+        notifications.show({
+          title: 'Subject Deleted',
+          message: 'Subject has been deleted!',
+          color: 'black',
+          style: { backgroundColor: 'rgba(144, 238, 144, 0.2)' },
+        });
+      } else {
+        notifications.show({
+          title: 'Delete failed',
+          message: 'Could not delete subject',
+          color: 'black',
+          style: { backgroundColor: 'rgba(251, 76, 76, 0.25)' },
+        });
       }
     },
     [remove, getAll],
@@ -87,7 +106,10 @@ export default function SideMenu() {
               padding: '6px 10px',
               borderRadius: '6px',
               backgroundColor:
-                subject.name === hoveredSubject ? '#f5f5f5' : 'transparent',
+                subject.subject_id === selected?.subject_id ||
+                subject.name === hoveredSubject
+                  ? '#f5f5f5'
+                  : 'transparent',
               transition: 'background-color 0.2s ease',
               cursor: 'pointer',
             }}
