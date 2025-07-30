@@ -68,7 +68,6 @@ export default function SubjectProvider({ children }: Props) {
       SUBJECT_EVENTS.DELETE,
       subjectId,
     );
-
     return response.success;
   }, []);
 
