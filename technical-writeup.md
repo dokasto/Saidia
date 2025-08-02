@@ -2,7 +2,9 @@
 
 ## Executive Summary
 
-Saidia is an AI-powered teacher's assistant designed to bring educational technology to underserved regions with poor internet connectivity. Built as an Electron desktop application, it leverages local AI models to generate educational questions from uploaded documents, enabling teachers to create assessments without requiring internet access.
+Many regions across Africa face significant challenges with unreliable internet connectivity and inconsistent power supply. In these environments, a laptop with a tool like Saidia becomes a powerful solution for empowering educators with AI capabilities. By operating entirely offline and requiring only basic hardware, Saidia makes advanced AI technology accessible to teachers in communities where traditional cloud-based solutions are impractical or impossible.
+
+Built as an Electron desktop application, it leverages local AI models to generate educational questions from uploaded documents, enabling teachers to create assessments without requiring internet access.
 
 ## Architecture Overview
 
@@ -74,7 +76,7 @@ const prompt = generatePromptAndSchema(subjectName, options, chunks);
 const response = await LLMService.generate({
   model: await LLMService.recommendModelForQuestionGeneration(),
   prompt,
-  format: zodToJsonSchema(zodSchema)
+  format: zodToJsonSchema(zodSchema),
 });
 ```
 
@@ -94,13 +96,14 @@ try {
   // Fallback: Manual extension loading with path resolution
   const extensionPath = path.join(
     app.getAppPath().replace('app.asar', 'app.asar.unpacked'),
-    'node_modules/sqlite-vec/node_modules/sqlite-vec-darwin-arm64/vec0.dylib'
+    'node_modules/sqlite-vec/node_modules/sqlite-vec-darwin-arm64/vec0.dylib',
   );
   this.vectorDbInstance.loadExtension(extensionPath);
 }
 ```
 
 **Key Insights**:
+
 - Electron's ASAR packaging requires special handling for native extensions
 - Platform-specific binary paths need dynamic resolution
 - Multiple fallback strategies ensure robustness
@@ -115,15 +118,19 @@ try {
 // Platform-specific Ollama download URLs
 const OLLAMA_DOWNLOAD_URLS = {
   MAC: 'https://github.com/ollama/ollama/releases/download/v0.9.5/Ollama.dmg',
-  WINDOWS: 'https://github.com/ollama/ollama/releases/download/v0.9.5/ollama-windows-amd64.zip',
+  WINDOWS:
+    'https://github.com/ollama/ollama/releases/download/v0.9.5/ollama-windows-amd64.zip',
   LINUX: {
-    AMD64: 'https://github.com/ollama/ollama/releases/download/v0.9.5/ollama-linux-amd64',
-    ARM64: 'https://github.com/ollama/ollama/releases/download/v0.9.5/ollama-linux-arm64'
-  }
+    AMD64:
+      'https://github.com/ollama/ollama/releases/download/v0.9.5/ollama-linux-amd64',
+    ARM64:
+      'https://github.com/ollama/ollama/releases/download/v0.9.5/ollama-linux-arm64',
+  },
 };
 ```
 
 **Implementation Features**:
+
 - Automatic platform detection and binary download
 - Progress tracking for large model downloads
 - Cross-platform executable management
@@ -144,7 +151,7 @@ private static async startOllamaOnWindows(): Promise<boolean> {
     OLLAMA_MODELS: this.ollamaPath,
     PATH: `${path.dirname(ollamaExecutable)};${process.env.PATH || ''}`
   };
-  
+
   this.ollamaProcess = spawn(ollamaExecutable, ['serve'], {
     stdio: ['pipe', 'pipe', 'pipe'],
     env,
@@ -156,6 +163,7 @@ private static async startOllamaOnWindows(): Promise<boolean> {
 ```
 
 **Key Achievements**:
+
 - Successfully packaged for Windows with NSIS installer
 - Handled Windows-specific process management
 - Resolved path and environment variable issues
@@ -288,4 +296,4 @@ Saidia represents a significant technical achievement in bringing AI-powered edu
 
 The technical challenges overcome—particularly the SQLite vector extension integration and cross-platform Ollama packaging—demonstrate the engineering depth required to create truly accessible AI applications. The choice of Gemma 3n models provides the perfect balance of performance and resource efficiency for offline operation.
 
-This project proves that with careful engineering and thoughtful architecture, advanced AI capabilities can be made available to communities regardless of their internet connectivity, opening new possibilities for educational technology deployment in developing regions. 
+This project proves that with careful engineering and thoughtful architecture, advanced AI capabilities can be made available to communities regardless of their internet connectivity, opening new possibilities for educational technology deployment in developing regions.
