@@ -1,215 +1,202 @@
 # Saidia - AI Teacher's Assistant
 
-<div align="center">
-
-![Saidia Logo](assets/icon.png)
-
-**An AI-powered desktop application designed to revolutionize how educators manage, organize, and generate educational content.**
-
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/your-username/Saidia)
-[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
-[![Electron](https://img.shields.io/badge/Electron-35.7.0-blue.svg)](https://electronjs.org/)
-[![React](https://img.shields.io/badge/React-19.0.0-blue.svg)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue.svg)](https://www.typescriptlang.org/)
-
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Development](#development) • [Documentation](#documentation)
-
-</div>
-
----
+Saidia is an AI-powered desktop application designed to empower educators in low-connectivity regions with powerful AI capabilities. It provides an intuitive interface for uploading documents and automatically generating various types of questions - all running locally on your device without requiring internet connectivity.
 
 ## 🚀 Features
 
-### 📚 Content Management
+- **🌐 Offline-First Design**: Works completely offline - perfect for low-connectivity regions
+- **📚 Document Upload**: Support for multiple file formats (PDF, DOC, DOCX, TXT, MD, ODT)
+- **🤖 AI-Powered Question Generation**: Automatically generates questions from uploaded materials
+- **📝 Multiple Question Types**: Multiple choice, true/false, and fill-in-the-blank questions
+- **📊 Difficulty Levels**: Easy, medium, and hard difficulty settings
+- **📁 Subject Organization**: Organize materials and questions by subject
+- **💻 Local AI Processing**: Uses Ollama for on-device AI processing - no cloud dependencies
+- **🖥️ Cross-Platform**: Works on Windows, macOS, and Linux
+- **🔒 Privacy-First**: All data stays on your device - no data sent to external servers
 
-- **Subject Organization**: Create and manage subjects to organize your educational content
-- **Multi-format Support**: Upload PDFs, Word documents, text files, markdown, and images
-- **Smart File Storage**: Automatic organization with secure, platform-specific storage
+## 🛠️ Tech Stack
 
-### 🤖 AI-Powered Capabilities
+- **Frontend**: React 19, TypeScript, Mantine UI
+- **Backend**: Electron, Node.js
+- **AI**: Ollama (local LLM processing)
+- **Database**: SQLite (local storage)
+- **Styling**: StyleX, PostCSS
 
-- **Intelligent Question Generation**: Automatically generate questions from your content
-- **Multiple Question Types**: Multiple choice, true/false, and fill-in-the-blank questions
-- **Difficulty Levels**: Easy, medium, and hard question categorization
-- **Vector Search**: Semantic search through document content using AI embeddings
+## 📋 Prerequisites
 
-### 🎯 Educational Tools
+- **Node.js** (>= 14.x)
+- **npm** (>= 7.x)
+- **Ollama** (for local AI processing)
+- **Internet connection** (only for initial setup and model download)
 
-- **Question Bank**: Store and manage generated questions by subject and difficulty
-- **Content Analysis**: Extract and process text from various document formats
-- **Cross-platform**: Works seamlessly on Windows, macOS, and Linux
+### Installing Ollama
 
-### 🔧 Technical Excellence
-
-- **Modern Architecture**: Built with Electron, React, and TypeScript
-- **Vector Database**: SQLite with sqlite-vec for efficient similarity search
-- **Local AI Processing**: Integration with Ollama for local AI model processing
-- **Type Safety**: Full TypeScript support with strict type checking
-
-## 🛠️ Technology Stack
-
-### Frontend
-
-- **React 19.0.0** - Modern UI framework
-- **TypeScript 5.8.2** - Type-safe development
-- **Mantine UI 8.1.2** - Beautiful component library
-- **StyleX 0.14.1** - CSS-in-JS styling
-- **React Router 7.3.0** - Client-side routing
-
-### Backend
-
-- **Electron 35.7.0** - Cross-platform desktop framework
-- **Node.js 14+** - JavaScript runtime
-- **SQLite** - Lightweight database
-- **sqlite-vec** - Vector similarity search
-- **Better-sqlite3** - High-performance SQLite driver
-- **Sequelize ORM** - Database abstraction layer
-
-### AI/ML
-
-- **Ollama Integration** - Local AI model processing
-- **Nomic Embed Text v1.5** - Text embedding model
-- **Gemma3 Models** - Question generation and processing
-- **Vector Embeddings** - 384-dimensional semantic vectors
-
-## 📦 Installation
-
-### Prerequisites
-
-- **Node.js** 14.x or higher
-- **npm** 7.x or higher
-- **Git**
-
-### Quick Start
+**macOS:**
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/Saidia.git
-cd Saidia
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm start
+# Download and install from https://ollama.ai
+# Or use Homebrew
+brew install ollama
 ```
 
-### Production Build
+**Windows:**
 
 ```bash
-# Build for your current platform
-npm run package
-
-# Build for specific platforms
-npm run build:mac    # macOS
-npm run build:win    # Windows
-npm run build:linux  # Linux
+# Download from https://ollama.ai/download
+# Extract and run the installer
 ```
 
-## 🎯 Usage
+**Linux:**
+
+```bash
+curl -fsSL https://ollama.ai/install.sh | sh
+```
+
+## 🚀 Quick Start
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd Saidia
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Download AI models (one-time setup)**
+
+   ```bash
+   # Start Ollama service
+   ollama serve
+
+   # In a new terminal, pull the required models
+   # This requires internet connection but only needs to be done once
+   ollama pull gemma3n:e4b-it-fp16
+   ollama pull gemma3n:e2b-it-q4_K_M
+   ollama pull nomic-embed-text:v1.5
+   ```
+
+4. **Start the application**
+   ```bash
+   npm start
+   ```
+
+> **💡 Pro Tip**: Once the AI models are downloaded, Saidia works completely offline. Perfect for classrooms with limited or no internet access!
+
+## 🌍 Perfect for Low-Connectivity Regions
+
+Saidia is specifically designed for educators working in areas with limited or unreliable internet access:
+
+- **🔌 Works Offline**: Once set up, no internet connection required
+- **📱 Local Processing**: All AI processing happens on your device
+- **💾 Local Storage**: All data and questions stored locally
+- **🚀 Fast Performance**: No waiting for cloud responses
+- **🔒 Privacy Protected**: No data leaves your device
+- **💰 Cost Effective**: No ongoing cloud service fees
+
+### Ideal Use Cases:
+
+- **Rural Schools**: Where internet connectivity is unreliable
+- **Remote Classrooms**: Areas with limited infrastructure
+- **Budget-Conscious Institutions**: Avoiding cloud service costs
+- **Privacy-Focused Environments**: Where data security is paramount
+
+## 📖 Usage
 
 ### Getting Started
 
-1. **Create a Subject**: Start by creating a subject to organize your content
-2. **Upload Files**: Add PDFs, documents, or images to your subject
-3. **Generate Questions**: Use AI to automatically generate questions from your content
-4. **Search Content**: Use semantic search to find relevant information
-5. **Manage Questions**: Organize questions by difficulty and type
+1. **Launch the app** - The application will open with a splash screen
+2. **Navigate to Dashboard** - Click through to access the main interface
+3. **Create a Subject** - Use the side menu to create and manage subjects
 
-### Basic Workflow
+> **🌐 Offline Ready**: After initial setup, Saidia works entirely offline. No internet connection required for daily use!
 
-```typescript
-// Example: Creating a subject and adding content
-const subject = await window.electronAPI.createSubject('Mathematics 101');
+### Uploading Documents
 
-// Upload a file
-const file = await window.electronAPI.createFile(
-  subject.data.subject_id,
-  'algebra_basics.pdf',
-  '/path/to/file',
-);
+1. **Select a Subject** - Choose or create a subject from the side menu
+2. **Upload Files** - Click "Upload files for this subject" to add your course materials
+3. **Supported Formats** - PDF, DOC, DOCX, TXT, MD, ODT files are supported
 
-// Generate questions
-const questions = await window.electronAPI.generateQuestions(
-  subject.data.subject_id,
-  {
-    difficulty: 'medium',
-    count: 5,
-    type: 'multiple_choice',
-  },
-);
+### Generating Questions
+
+1. **Configure Settings** - Select question type, difficulty, and number of questions
+2. **Generate Questions** - Click "Generate" to create questions from your materials
+3. **Review & Edit** - Edit generated questions before saving them
+4. **Save Questions** - Questions are saved to your local database
+
+### Managing Questions
+
+- **View All Questions** - See all generated questions in the questions table
+- **Edit Questions** - Modify questions directly in the interface
+- **Delete Questions** - Remove unwanted questions as needed
+
+## 🏗️ Development
+
+### Available Scripts
+
+- `npm start` - Start the development server
+- `npm run build` - Build the application for production
+- `npm run package` - Package the application for distribution
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint errors
+- `npm test` - Run tests
+
+### Project Structure
+
 ```
-
-### Supported File Types
-
-| Format     | Description              | Processing             |
-| ---------- | ------------------------ | ---------------------- |
-| **PDF**    | Adobe PDF documents      | Text extraction + OCR  |
-| **DOCX**   | Microsoft Word documents | Native text extraction |
-| **TXT**    | Plain text files         | Direct text processing |
-| **MD**     | Markdown files           | Markdown parsing       |
-| **Images** | JPG, PNG, HEIC, etc.     | OCR text extraction    |
-
-## 🧪 Development
-
-### Development Commands
-
-```bash
-# Start development server
-npm start
-
-# Build for development
-npm run build
-
-# Run tests
-npm test
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Package for distribution
-npm run package
+src/
+├── main/           # Electron main process
+├── renderer/       # React frontend
+├── constants/      # App constants and configurations
+└── types/          # TypeScript type definitions
 ```
-
-## 📚 Documentation
-
-For comprehensive documentation, see the [Wiki](https://github.com/your-username/Saidia/wiki).
-
-- **Architecture** - System design and component relationships
-- **API Reference** - IPC handlers and database operations
-- **Database Schema** - Database structure and relationships
-- **Development Guide** - Development workflow and best practices
 
 ## 🤝 Contributing
 
-This is proprietary software. For questions or support, please contact the development team.
-
-### Development Setup
-
-This is proprietary software. Development access is restricted to authorized team members only.
-
-### Code Style
-
-- **TypeScript**: Strict type checking enabled
-- **ESLint**: Airbnb configuration with custom rules
-- **Prettier**: Consistent code formatting
-- **Naming**: camelCase for variables, PascalCase for components
-
-_Note: This is proprietary software with restricted development access._
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is proprietary software. All rights reserved. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Joy** - [LinkedIn](https://www.linkedin.com/in/joy-nk/)
+- **Udo** - [LinkedIn](https://www.linkedin.com/in/thisisudo/)
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Ollama not found:**
+
+- Ensure Ollama is installed and running
+- Check that the required models are pulled
+
+**Build errors:**
+
+- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
+- Ensure you're using the correct Node.js version
+
+**Electron build issues:**
+
+- On macOS, you may need to install Xcode Command Line Tools
+- On Windows, ensure you have Visual Studio Build Tools
+
+**Offline usage:**
+
+- Once models are downloaded, the app works completely offline
+- No internet connection required for question generation or document processing
+- All data is stored locally on your device
 
 ---
 
-<div align="center">
-
-**Made with ❤️ for educators worldwide**
-
-_Proprietary software - All rights reserved_
-
-</div>
+Built with ❤️ for teachers everywhere.
