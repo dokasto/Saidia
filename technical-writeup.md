@@ -294,6 +294,6 @@ Saidia addresses a critical gap in educational technology by:
 
 Saidia represents a significant technical achievement in bringing AI-powered educational tools to underserved regions. The combination of local AI processing, robust cross-platform deployment, and thoughtful architecture makes it a scalable solution for educational technology access worldwide.
 
-The technical challenges overcome—particularly the SQLite vector extension integration and cross-platform Ollama packaging—demonstrate the engineering depth required to create truly accessible AI applications. The choice of Gemma 3n models provides the perfect balance of performance and resource efficiency for offline operation.
+The technical challenges overcome, particularly the SQLite vector extension integration and cross-platform Ollama packaging—demonstrate the engineering depth required to create truly accessible AI applications. The choice of Gemma 3n models provides the perfect balance of performance and resource efficiency for offline operation.
 
 This project proves that with careful engineering and thoughtful architecture, advanced AI capabilities can be made available to communities regardless of their internet connectivity, opening new possibilities for educational technology deployment in developing regions.
