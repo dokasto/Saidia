@@ -61,6 +61,8 @@ export default function QuestionsTableUI({ questions, onSaved }: Props) {
     setSelectedQuestionIds([]);
   }, [questions]);
 
+  console.log('questions', questions);
+
   const rows = questions.map((q) => (
     <Table.Tr key={q.question_id}>
       <Table.Td>
@@ -98,7 +100,7 @@ export default function QuestionsTableUI({ questions, onSaved }: Props) {
 
   return (
     <Stack>
-      <Table.ScrollContainer minWidth={500} maxHeight={300}>
+      <Table.ScrollContainer minWidth={500} maxHeight={700}>
         <Table
           striped
           highlightOnHover

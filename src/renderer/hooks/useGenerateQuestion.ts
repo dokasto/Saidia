@@ -1,35 +1,39 @@
 import { useState } from 'react';
 import { TGeneratedQuestion } from '../../types';
+import { LLM_EVENTS } from '../../constants/events';
 
-export default function useGenerateQuestion(subjectId: string | null) {
+export default function useGenerateQuestion(targetSubjectId: string) {
   const [questions, setQuestions] = useState<TGeneratedQuestion[]>([]);
 
   const generateQuestion = async (
-    subjectId: string,
     type: string,
     difficulty: string,
     count: number,
   ) => {
-    const mockResponse: TGeneratedQuestion[] = [
-      {
-        question: 'What is the time complexity of binary search?',
-        choices: ['O(n)', 'O(log n)', 'O(n log n)', 'O(1)'],
-        answer: 1,
-      },
-      {
-        question: 'Explain the difference between stack and queue.',
-        choices: ['O(n)', 'O(log n)', 'O(n log n)', 'O(1)'],
-        answer: 0,
-      },
-      {
-        question: 'Write a function to reverse a linked list.',
-        choices: [],
-        answer: undefined,
-      },
-    ];
+    try {
+      const options = {
+        count,
+        difficulty,
+        type,
+      };
 
-    setQuestions(mockResponse);
-    console.log('Generated Questions:', mockResponse);
+      const response = await window.electron.ipcRenderer.invoke(
+        LLM_EVENTS.GENERATE_QUESTIONS,
+        targetSubjectId,
+        options,
+      );
+
+      if (response.success && response.data) {
+        setQuestions(response.data);
+        console.log('Generated Questions:', response.data);
+      } else {
+        console.error('Failed to generate questions:', response.error);
+        setQuestions([]);
+      }
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      setQuestions([]);
+    }
   };
 
   return { generateQuestion, questions };

@@ -20,7 +20,18 @@ export default function Dashboard() {
     >
       <AppShell.Header>
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        <div>{APP_NAME}</div>
+        <div
+          style={{
+            fontWeight: 'bold',
+            fontSize: '1.5rem',
+            justifyContent: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%',
+          }}
+        >
+          {APP_NAME}
+        </div>
       </AppShell.Header>
 
       <AppShell.Navbar p="md">

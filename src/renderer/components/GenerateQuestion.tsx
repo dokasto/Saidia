@@ -33,12 +33,7 @@ export default function GenerateQuestion({ subject, onSaved }: Props) {
 
   const handleGenerate = async () => {
     try {
-      await generateQuestion(
-        subject.subject_id,
-        selectedType,
-        selectedDifficulty,
-        numQuestions,
-      );
+      await generateQuestion(selectedType, selectedDifficulty, numQuestions);
       setModalOpen(true);
     } catch (err) {
       console.error('Failed to generate questions:', err);

@@ -24,7 +24,7 @@ export default function App() {
       <SubjectProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<SplashScreen />} />
             <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
           <footer
@@ -48,7 +48,7 @@ export default function App() {
               rel="noopener noreferrer"
               style={{
                 color: '#0077b5',
-                textDecoration: 'none',
+                textDecoration: 'underline',
                 fontWeight: 'bold',
               }}
             >
@@ -61,7 +61,7 @@ export default function App() {
               rel="noopener noreferrer"
               style={{
                 color: '#0077b5',
-                textDecoration: 'none',
+                textDecoration: 'underline',
                 fontWeight: 'bold',
               }}
             >

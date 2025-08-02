@@ -37,12 +37,11 @@ export const MODELS = {
   GEMMA_3N_E4B_IT_FP16: 'gemma3n:e4b-it-fp16',
   GEMMA3N_E2B_IT_Q4_K_M: 'gemma3n:e2b-it-q4_K_M',
   NOMIC_EMBED_TEXT_V1_5: 'nomic-embed-text:v1.5',
-  QWEN3_0_6B: 'qwen3.0:0.6b',
 } as const;
 
 export const CONFIG_MODELS = {
   EMBEDDING_MODEL: MODELS.NOMIC_EMBED_TEXT_V1_5,
-  QUESTION_GENERATION_MODEL: MODELS.QWEN3_0_6B, // todo: switch to gemma3n later
+  QUESTION_GENERATION_MODEL: MODELS.GEMMA_3N_E4B_IT_FP16,
 } as const;
 
 export const QuestionDifficulty = {

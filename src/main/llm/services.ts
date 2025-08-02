@@ -95,6 +95,10 @@ export default class LLMServices {
       });
       console.error('=== LLM Service Initialization Failed ===', error);
     } finally {
+      onProgress?.({
+        status: 'LLM Service Initialization Complete',
+        completed: true,
+      });
       //  download larger models in the background
       this.downloadModels([MODELS.GEMMA_3N_E4B_IT_FP16]);
     }

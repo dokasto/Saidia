@@ -17,19 +17,17 @@ type Props = {
 
 export default function File({ subject }: Props) {
   const { add, getAll, files, deleteFile } = useFiles(subject.subject_id);
-  const hasListedFiles = useRef(false);
 
   useEffect(() => {
-    if (hasListedFiles.current) {
-      return;
-    }
-    hasListedFiles.current = true;
     getAll();
-  }, [getAll]);
+  }, [subject.subject_id]);
 
   const handleUpload = useCallback(async () => {
-    const result = await add();
-    if (result) {
+    try {
+      await add();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    } finally {
       getAll();
     }
   }, [getAll, add]);
@@ -54,7 +52,7 @@ export default function File({ subject }: Props) {
   return (
     <div>
       <Stack gap="sm" align="start">
-        <h1 style={{ margin: 0 }}>{subject.name}</h1>
+        <h3 style={{ margin: 0 }}>{subject.name}</h3>
 
         <Button
           variant="outline"

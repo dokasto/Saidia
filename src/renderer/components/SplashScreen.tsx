@@ -42,7 +42,7 @@ export default function SplashScreen() {
         navigate('/dashboard');
       }, 2000);
     }
-  }, [progress?.completed, navigate]);
+  }, [progress?.completed, navigate, progress]);
 
   return (
     <div {...stylex.props(styles.container)}>
