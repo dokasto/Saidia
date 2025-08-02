@@ -4,6 +4,9 @@ Saidia is an AI-powered desktop application designed to empower educators in low
 
 <img width="1697" height="1198" alt="Screenshot 2025-08-02 at 10 49 33 am" src="https://github.com/user-attachments/assets/54a7d824-faad-478c-8c9d-220005ebb74e" />
 
+[How it works](https://www.youtube.com/watch?v=kvl7-pNIIQc)
+
+
 
 ## 🚀 Features
 
