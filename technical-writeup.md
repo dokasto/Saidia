@@ -1,6 +1,6 @@
 # Saidia: Technical Writeup
 
-## Executive Summary
+## Summary
 
 Many regions across Africa face significant challenges with unreliable internet connectivity and inconsistent power supply. In these environments, a laptop with a tool like Saidia becomes a powerful solution for empowering educators with AI capabilities. By operating entirely offline and requiring only basic hardware, Saidia makes advanced AI technology accessible to teachers in communities where traditional cloud-based solutions are impractical or impossible.
 
