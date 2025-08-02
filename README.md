@@ -27,6 +27,10 @@ Saidia is an AI-powered desktop application designed to empower educators in low
 - **Budget-Conscious Institutions**: Avoiding cloud service costs
 - **Privacy-Focused Environments**: Where data security is paramount
 
+## 📖 Documentation
+
+For detailed technical information about the project architecture, implementation details, and development decisions, see the [Technical Writeup](technical-writeup.md).
+
 ## 👥 Authors
 
 - **Joy** - [LinkedIn](https://www.linkedin.com/in/joy-nk/)
