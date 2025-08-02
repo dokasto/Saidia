@@ -36,12 +36,13 @@ export const OLLAMA_DOWNLOAD_URLS = {
 export const MODELS = {
   GEMMA_3N_E4B_IT_FP16: 'gemma3n:e4b-it-fp16',
   GEMMA3N_E2B_IT_Q4_K_M: 'gemma3n:e2b-it-q4_K_M',
+  GEMMA3N_E4B_IT_Q4_K_M: 'gemma3n:e4b-it-q4_K_M',
   NOMIC_EMBED_TEXT_V1_5: 'nomic-embed-text:v1.5',
 } as const;
 
 export const CONFIG_MODELS = {
   EMBEDDING_MODEL: MODELS.NOMIC_EMBED_TEXT_V1_5,
-  QUESTION_GENERATION_MODEL: MODELS.GEMMA_3N_E4B_IT_FP16,
+  QUESTION_GENERATION_MODEL: MODELS.GEMMA3N_E4B_IT_Q4_K_M,
 } as const;
 
 export const QuestionDifficulty = {

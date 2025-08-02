@@ -100,7 +100,7 @@ export default class LLMServices {
         completed: true,
       });
       //  download larger models in the background
-      this.downloadModels([MODELS.GEMMA_3N_E4B_IT_FP16]);
+      // this.downloadModels([MODELS.GEMMA_3N_E4B_IT_FP16]);
     }
   }
 
